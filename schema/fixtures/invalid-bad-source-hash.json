@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "metadata": {
+    "programId": "bad-hash",
+    "programVersionId": "bad-hash-v1",
+    "versionLabel": "Bad hash",
+    "contentHash": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "validationStatus": "blocked",
+  "validationIssues": [],
+  "importAudit": {
+    "sourceHash": "not-a-sha-256",
+    "sourceFilename": "bad-hash.xlsx",
+    "importedAtUtc": "2026-05-16T00:00:00Z",
+    "sourceKind": "synthetic",
+    "consentGranted": false,
+    "schemaVersionUsed": 1
+  },
+  "exerciseCatalog": [],
+  "requiredReferences": [],
+  "programStructure": { "blocks": [] },
+  "progressionRules": []
+}

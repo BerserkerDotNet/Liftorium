@@ -1,0 +1,155 @@
+{
+  "schemaVersion": 1,
+  "metadata": {
+    "programId": "warnings-fixture",
+    "programVersionId": "warnings-fixture-v1",
+    "versionLabel": "Warnings v1",
+    "displayName": "Warnings-only fixture",
+    "contentHash": "35bc70553972d2631b6750eb819ab65a117bb2f6e16f2d66b21b593e4036ab5d"
+  },
+  "validationStatus": "activatable",
+  "validationIssues": [
+    {
+      "severity": "warning",
+      "code": "construct.tempo",
+      "message": "Tempo notation preserved as note-only instruction."
+    }
+  ],
+  "importAudit": {
+    "sourceHash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "sourceFilename": "synthetic-warnings.xlsx",
+    "importedAtUtc": "2026-05-16T00:00:00Z",
+    "sourceKind": "synthetic",
+    "consentGranted": false,
+    "schemaVersionUsed": 1
+  },
+  "exerciseCatalog": [
+    {
+      "id": "back-squat",
+      "displayName": "Back squat",
+      "family": "squat",
+      "equipment": "barbell"
+    },
+    {
+      "id": "front-squat",
+      "displayName": "Front squat",
+      "family": "squat",
+      "equipment": "barbell"
+    }
+  ],
+  "requiredReferences": [
+    {
+      "id": "tm-squat",
+      "referenceType": "training_max",
+      "exerciseId": "back-squat",
+      "firstRunnableWeekIndex": 1,
+      "supplied": true,
+      "value": 315,
+      "unit": "lb"
+    },
+    {
+      "id": "tm-front-squat",
+      "referenceType": "training_max",
+      "exerciseId": "front-squat",
+      "firstRunnableWeekIndex": 2,
+      "supplied": false
+    }
+  ],
+  "programStructure": {
+    "blocks": [
+      {
+        "id": "block-1",
+        "order": 1,
+        "weeks": [
+          {
+            "id": "week-1",
+            "weekIndex": 1,
+            "sessions": [
+              {
+                "id": "w1-d1",
+                "sessionIndex": 1,
+                "groups": [
+                  {
+                    "id": "w1-d1-g1",
+                    "order": 1,
+                    "kind": "single",
+                    "prescriptionItems": [
+                      {
+                        "id": "w1-d1-g1-i1",
+                        "order": 1,
+                        "prescribedExerciseId": "back-squat",
+                        "role": "working",
+                        "notes": [
+                          {
+                            "kind": "tempo",
+                            "text": "3-0-1-0 down/up"
+                          }
+                        ],
+                        "setPrescriptions": [
+                          {
+                            "id": "w1-d1-g1-i1-s1",
+                            "order": 1,
+                            "setKind": "working",
+                            "targets": [
+                              {
+                                "kind": "percent",
+                                "percent": 70,
+                                "referenceId": "tm-squat",
+                                "reps": 5
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "week-2",
+            "weekIndex": 2,
+            "sessions": [
+              {
+                "id": "w2-d1",
+                "sessionIndex": 1,
+                "groups": [
+                  {
+                    "id": "w2-d1-g1",
+                    "order": 1,
+                    "kind": "single",
+                    "prescriptionItems": [
+                      {
+                        "id": "w2-d1-g1-i1",
+                        "order": 1,
+                        "prescribedExerciseId": "front-squat",
+                        "role": "working",
+                        "setPrescriptions": [
+                          {
+                            "id": "w2-d1-g1-i1-s1",
+                            "order": 1,
+                            "setKind": "working",
+                            "targets": [
+                              {
+                                "kind": "percent",
+                                "percent": 70,
+                                "referenceId": "tm-front-squat",
+                                "reps": 5
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "progressionRules": []
+}

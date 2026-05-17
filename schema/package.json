@@ -1,0 +1,22 @@
+{
+  "name": "liftorium-schema",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Versioned Liftorium program-resource JSON Schema, fixtures, and Ajv-based validator. Used by tools/import (Phase 3) to validate finalized resources and by Android's ProgramResourceLoader (Phase 4) to validate before runtime load.",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "refresh-fixture-hashes": "node scripts/refresh-fixture-hashes.mjs"
+  },
+  "dependencies": {
+    "ajv": "8.17.1",
+    "ajv-formats": "3.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.8.0",
+    "typescript": "5.6.3",
+    "vitest": "2.1.9"
+  }
+}

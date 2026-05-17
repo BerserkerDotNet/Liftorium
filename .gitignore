@@ -1,0 +1,41 @@
+# --- Editor / IDE ---
+.vscode/.ai-review.json
+.idea/
+.vs/
+*.iml
+*.swp
+*.swo
+*.bak
+*~
+
+# --- OS junk ---
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# --- Env / secrets ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.keystore
+*.jks
+*.p12
+*.pfx
+secrets.*
+credentials.*
+
+# --- Logs / temp ---
+*.log
+*.tmp
+
+# --- Copilot / agent session artifacts ---
+.copilot/
+
+# --- Local sample materials (never commit private program sources) ---
+samples/
+private/

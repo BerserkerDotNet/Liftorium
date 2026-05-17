@@ -1,0 +1,16 @@
+{
+  "name": "liftorium-import",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Spreadsheet-first developer-time import workflow that produces versioned Liftorium program JSON resources. Phase 1 ships only the package skeleton and a smoke test that proves the harness wiring; Phase 3 fills in the parser, normalizer, validator, and correction loop.",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "22.7.5",
+    "typescript": "5.6.3",
+    "vitest": "2.1.9"
+  }
+}

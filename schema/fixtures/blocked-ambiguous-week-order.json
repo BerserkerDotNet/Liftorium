@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "metadata": {
+    "programId": "blocked-ambiguous-week-order",
+    "programVersionId": "blocked-ambiguous-week-order-v1",
+    "versionLabel": "Ambiguous week order v1",
+    "contentHash": "5f276d853840eecf862ea2d8e7a04ce3ea316d025a72141c1b2a96754e5fdfb0"
+  },
+  "validationStatus": "blocked",
+  "validationIssues": [
+    {
+      "severity": "critical",
+      "code": "structure.ambiguous_week_order",
+      "message": "Duplicate weekIndex within block."
+    }
+  ],
+  "importAudit": {
+    "sourceHash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "sourceFilename": "ambiguous-weeks.xlsx",
+    "importedAtUtc": "2026-05-16T00:00:00Z",
+    "sourceKind": "synthetic",
+    "consentGranted": false,
+    "schemaVersionUsed": 1
+  },
+  "exerciseCatalog": [
+    {
+      "id": "back-squat",
+      "displayName": "Back squat",
+      "family": "squat",
+      "equipment": "barbell"
+    }
+  ],
+  "requiredReferences": [],
+  "programStructure": {
+    "blocks": [
+      {
+        "id": "block-1",
+        "order": 1,
+        "weeks": [
+          {
+            "id": "week-1a",
+            "weekIndex": 1,
+            "sessions": [
+              {
+                "id": "w1a-d1",
+                "sessionIndex": 1,
+                "groups": [
+                  {
+                    "id": "w1a-d1-g1",
+                    "order": 1,
+                    "kind": "single",
+                    "prescriptionItems": [
+                      {
+                        "id": "w1a-d1-g1-i1",
+                        "order": 1,
+                        "prescribedExerciseId": "back-squat",
+                        "role": "working",
+                        "setPrescriptions": [
+                          {
+                            "id": "w1a-d1-g1-i1-s1",
+                            "order": 1,
+                            "setKind": "working",
+                            "targets": [
+                              {
+                                "kind": "rep_range",
+                                "repMin": 5,
+                                "repMax": 8
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "week-1b",
+            "weekIndex": 1,
+            "sessions": [
+              {
+                "id": "w1b-d1",
+                "sessionIndex": 1,
+                "groups": [
+                  {
+                    "id": "w1b-d1-g1",
+                    "order": 1,
+                    "kind": "single",
+                    "prescriptionItems": [
+                      {
+                        "id": "w1b-d1-g1-i1",
+                        "order": 1,
+                        "prescribedExerciseId": "back-squat",
+                        "role": "working",
+                        "setPrescriptions": [
+                          {
+                            "id": "w1b-d1-g1-i1-s1",
+                            "order": 1,
+                            "setKind": "working",
+                            "targets": [
+                              {
+                                "kind": "rep_range",
+                                "repMin": 5,
+                                "repMax": 8
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "progressionRules": []
+}

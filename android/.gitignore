@@ -1,0 +1,12 @@
+.gradle
+build
+local.properties
+captures
+.cxx
+.kotlin
+out
+
+# Paparazzi default golden output. We run in artifact-only mode (no committed
+# baselines); see docs/decisions.md for rationale. Regenerate via
+# `:app:recordPaparazziDebug`.
+app/src/test/snapshots/

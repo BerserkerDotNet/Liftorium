@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "metadata": {
+    "programId": "rejected-fixture",
+    "programVersionId": "rejected-fixture-v1",
+    "versionLabel": "Rejected v1",
+    "contentHash": "4ddfe6675ddee6a735d678d87b49f05e676322954cb3f8476e70bc7fadfcd704"
+  },
+  "validationStatus": "rejected",
+  "validationIssues": [],
+  "importAudit": {
+    "sourceHash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "sourceFilename": "rejected.xlsx",
+    "importedAtUtc": "2026-05-16T00:00:00Z",
+    "sourceKind": "synthetic",
+    "consentGranted": false,
+    "schemaVersionUsed": 1
+  },
+  "exerciseCatalog": [
+    {
+      "id": "back-squat",
+      "displayName": "Back squat",
+      "family": "squat",
+      "equipment": "barbell"
+    }
+  ],
+  "requiredReferences": [],
+  "programStructure": {
+    "blocks": [
+      {
+        "id": "block-1",
+        "order": 1,
+        "weeks": [
+          {
+            "id": "week-1",
+            "weekIndex": 1,
+            "sessions": [
+              {
+                "id": "w1-d1",
+                "sessionIndex": 1,
+                "groups": [
+                  {
+                    "id": "w1-d1-g1",
+                    "order": 1,
+                    "kind": "single",
+                    "prescriptionItems": [
+                      {
+                        "id": "w1-d1-g1-i1",
+                        "order": 1,
+                        "prescribedExerciseId": "back-squat",
+                        "role": "working",
+                        "setPrescriptions": [
+                          {
+                            "id": "w1-d1-g1-i1-s1",
+                            "order": 1,
+                            "setKind": "working",
+                            "targets": [
+                              {
+                                "kind": "rep_range",
+                                "repMin": 5,
+                                "repMax": 8
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "progressionRules": []
+}

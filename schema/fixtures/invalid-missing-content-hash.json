@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "metadata": {
+    "programId": "missing-content-hash",
+    "programVersionId": "missing-content-hash-v1",
+    "versionLabel": "Missing content hash"
+  },
+  "validationStatus": "blocked",
+  "validationIssues": [],
+  "importAudit": {
+    "sourceHash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "sourceFilename": "missing-content-hash.xlsx",
+    "importedAtUtc": "2026-05-16T00:00:00Z",
+    "sourceKind": "synthetic",
+    "consentGranted": false,
+    "schemaVersionUsed": 1
+  },
+  "exerciseCatalog": [],
+  "requiredReferences": [],
+  "programStructure": { "blocks": [] },
+  "progressionRules": []
+}

@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "metadata": {
+    "programId": "blocked-construct-must-be-critical",
+    "programVersionId": "blocked-construct-must-be-critical-v1",
+    "versionLabel": "Default-critical construct v1",
+    "contentHash": "41501e4a80f0dc753de6cd1f338a0f23e20bf8739856be734163092df7f774d0"
+  },
+  "validationStatus": "blocked",
+  "validationIssues": [
+    {
+      "severity": "warning",
+      "code": "construct.cluster_sets",
+      "message": "Unclassified construct preserved as warning."
+    }
+  ],
+  "importAudit": {
+    "sourceHash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "sourceFilename": "unclassified-construct.xlsx",
+    "importedAtUtc": "2026-05-16T00:00:00Z",
+    "sourceKind": "synthetic",
+    "consentGranted": false,
+    "schemaVersionUsed": 1
+  },
+  "exerciseCatalog": [
+    {
+      "id": "back-squat",
+      "displayName": "Back squat",
+      "family": "squat",
+      "equipment": "barbell"
+    }
+  ],
+  "requiredReferences": [],
+  "programStructure": {
+    "blocks": [
+      {
+        "id": "block-1",
+        "order": 1,
+        "weeks": [
+          {
+            "id": "week-1",
+            "weekIndex": 1,
+            "sessions": [
+              {
+                "id": "w1-d1",
+                "sessionIndex": 1,
+                "groups": [
+                  {
+                    "id": "w1-d1-g1",
+                    "order": 1,
+                    "kind": "single",
+                    "prescriptionItems": [
+                      {
+                        "id": "w1-d1-g1-i1",
+                        "order": 1,
+                        "prescribedExerciseId": "back-squat",
+                        "role": "working",
+                        "setPrescriptions": [
+                          {
+                            "id": "w1-d1-g1-i1-s1",
+                            "order": 1,
+                            "setKind": "working",
+                            "targets": [
+                              {
+                                "kind": "rep_range",
+                                "repMin": 5,
+                                "repMax": 8
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "progressionRules": []
+}

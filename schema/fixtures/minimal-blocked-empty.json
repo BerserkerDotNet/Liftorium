@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "metadata": {
+    "programId": "minimal-blocked-empty",
+    "programVersionId": "minimal-blocked-empty-v1",
+    "versionLabel": "Minimal empty v1",
+    "contentHash": "9b125c8cf1ebbf39e220f8bd407aa0c0103683f877b65e717c7c4ee23da288f3"
+  },
+  "validationStatus": "blocked",
+  "validationIssues": [
+    {
+      "severity": "critical",
+      "code": "structure.no_runnable_week",
+      "message": "No runnable week is present yet."
+    }
+  ],
+  "importAudit": {
+    "sourceHash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "sourceFilename": "empty.xlsx",
+    "importedAtUtc": "2026-05-16T00:00:00Z",
+    "sourceKind": "synthetic",
+    "consentGranted": false,
+    "schemaVersionUsed": 1
+  },
+  "exerciseCatalog": [],
+  "requiredReferences": [],
+  "programStructure": {
+    "blocks": []
+  },
+  "progressionRules": []
+}

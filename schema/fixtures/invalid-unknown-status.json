@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "metadata": {
+    "programId": "bad-status",
+    "programVersionId": "bad-status-v1",
+    "versionLabel": "Bad status",
+    "contentHash": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "validationStatus": "approved",
+  "validationIssues": [],
+  "importAudit": {
+    "sourceHash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "sourceFilename": "bad-status.xlsx",
+    "importedAtUtc": "2026-05-16T00:00:00Z",
+    "sourceKind": "synthetic",
+    "consentGranted": false,
+    "schemaVersionUsed": 1
+  },
+  "exerciseCatalog": [],
+  "requiredReferences": [],
+  "programStructure": { "blocks": [] },
+  "progressionRules": []
+}

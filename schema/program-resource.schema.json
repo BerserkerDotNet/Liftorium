@@ -1,0 +1,470 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://liftorium.dev/schemas/program-resource.schema.json",
+  "title": "Liftorium program resource",
+  "description": "Versioned, app-ready program resource produced by the spreadsheet import workflow and consumed by the Android ProgramResourceLoader and the read-only Web review surfaces. Phase 2 (program-resources) defines the substantive content (exerciseCatalog, requiredReferences, programStructure with discriminated prescription targets, progressionRules) on top of the Phase 1 contract fields (schemaVersion, metadata, validationStatus, validationIssues, importAudit). Activation also requires the semantic validator in schema/semantics.ts; this schema only checks structural well-formedness.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "metadata",
+    "validationStatus",
+    "validationIssues",
+    "importAudit",
+    "exerciseCatalog",
+    "requiredReferences",
+    "programStructure",
+    "progressionRules"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Monotonically increasing program-resource schema version. Phase 2 uses 1."
+    },
+    "metadata": { "$ref": "#/$defs/metadata" },
+    "validationStatus": { "$ref": "#/$defs/validationStatus" },
+    "validationIssues": {
+      "type": "array",
+      "description": "Issues recorded by the import validator. Critical issues block activation per docs/architecture.md.",
+      "items": { "$ref": "#/$defs/validationIssue" }
+    },
+    "importAudit": { "$ref": "#/$defs/importAudit" },
+    "programDefaults": { "$ref": "#/$defs/roundingOverride" },
+    "exerciseCatalog": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/exerciseCatalogEntry" }
+    },
+    "requiredReferences": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/requiredReference" }
+    },
+    "programStructure": { "$ref": "#/$defs/programStructure" },
+    "progressionRules": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/progressionRule" }
+    }
+  },
+  "$defs": {
+    "metadata": {
+      "type": "object",
+      "required": ["programId", "programVersionId", "versionLabel", "contentHash"],
+      "additionalProperties": false,
+      "properties": {
+        "programId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable program identifier. Same across versions of the same program."
+        },
+        "programVersionId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable identifier for this specific immutable program version. Never reused."
+        },
+        "versionLabel": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable version label (e.g. '5/3/1 BBB v2024-10')."
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable program name shown in Android program library."
+        },
+        "authorAttribution": {
+          "type": "string",
+          "description": "Optional author/source attribution. Never includes source spreadsheet excerpts."
+        },
+        "contentHash": {
+          "type": "string",
+          "pattern": "^[A-Fa-f0-9]{64}$",
+          "description": "SHA-256 over the canonical resource content (metadata minus contentHash + exerciseCatalog + requiredReferences + programStructure + progressionRules + programDefaults). Excludes validationStatus, validationIssues, and importAudit so re-validating a resource never changes its content hash. ProgramResourceLoader (Phase 4) uses this to detect the 'same version ID, different content = conflict' case."
+        }
+      }
+    },
+    "validationStatus": {
+      "type": "string",
+      "enum": ["activatable", "blocked", "rejected"],
+      "description": "Aggregate activation gate. 'activatable' means no critical issues remain and ProgramResourceLoader will accept this resource. 'blocked' means critical issues remain; the operator can iterate. 'rejected' means the resource cannot be retried without re-import and is never activatable."
+    },
+    "validationIssue": {
+      "type": "object",
+      "required": ["severity", "code", "message"],
+      "additionalProperties": false,
+      "properties": {
+        "severity": { "type": "string", "enum": ["info", "warning", "critical"] },
+        "code": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable machine-readable dot-namespaced code (e.g. 'construct.drop_set'). Never includes source excerpts."
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Summarized issue description; never includes private source excerpts."
+        },
+        "locationHint": {
+          "type": "string",
+          "description": "Optional sheet/cell reference such as 'Week3!B12' to help the operator review. Must not include cell values."
+        }
+      }
+    },
+    "importAudit": {
+      "type": "object",
+      "required": [
+        "sourceHash",
+        "sourceFilename",
+        "importedAtUtc",
+        "sourceKind",
+        "consentGranted",
+        "schemaVersionUsed"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "sourceHash": {
+          "type": "string",
+          "pattern": "^[A-Fa-f0-9]{64}$",
+          "description": "SHA-256 of the source workbook. Synthetic fixtures may use the all-zero sentinel; private imports must use a real digest."
+        },
+        "sourceFilename": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Source workbook filename. Path components are stripped before storage."
+        },
+        "importedAtUtc": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 UTC timestamp when the resource was finalized."
+        },
+        "sourceKind": {
+          "type": "string",
+          "enum": ["synthetic", "private_import"],
+          "description": "Provenance discriminator. 'synthetic' permits the all-zero sentinel hash and stub filename for fixtures and examples. 'private_import' requires real provenance and consent."
+        },
+        "consentGranted": {
+          "type": "boolean",
+          "description": "True when the operator granted explicit consent for cloud-assisted import before source-derived AI processing."
+        },
+        "schemaVersionUsed": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Schema version the importer targeted. Must equal top-level schemaVersion (semantic check)."
+        }
+      }
+    },
+    "roundingOverride": {
+      "type": "object",
+      "description": "Optional rounding override. Precedence (lowest to highest): programDefaults → block → exercise → prescription target. Phase 2 only validates shape; Phase 4/8 (program runner / training-max progression) enforce precedence at calculation time.",
+      "additionalProperties": false,
+      "properties": {
+        "roundingIncrement": { "type": "number", "exclusiveMinimum": 0 },
+        "roundingUnit": { "type": "string", "enum": ["lb", "kg"] }
+      }
+    },
+    "exerciseCatalogEntry": {
+      "type": "object",
+      "required": ["id", "displayName", "family", "equipment"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$",
+          "minLength": 2,
+          "description": "Stable canonical exercise id, kebab-case. Survives re-import per the exercise recognition precedence in docs/architecture.md."
+        },
+        "displayName": { "type": "string", "minLength": 1 },
+        "family": {
+          "type": "string",
+          "enum": ["squat", "bench", "deadlift", "overhead_press", "accessory", "other"],
+          "description": "Stats inclusion bucket; the four main-lift families feed e1RM trends per docs/architecture.md."
+        },
+        "equipment": {
+          "type": "string",
+          "enum": ["barbell", "dumbbell", "machine", "bodyweight", "cable", "other"]
+        },
+        "defaultRoundingIncrement": { "type": "number", "exclusiveMinimum": 0 },
+        "defaultRoundingUnit": { "type": "string", "enum": ["lb", "kg"] },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["aliasText", "source"],
+            "additionalProperties": false,
+            "properties": {
+              "aliasText": { "type": "string", "minLength": 1 },
+              "source": { "type": "string", "enum": ["import", "operator"] }
+            }
+          }
+        }
+      }
+    },
+    "requiredReference": {
+      "type": "object",
+      "required": ["id", "referenceType", "supplied"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "referenceType": {
+          "type": "string",
+          "enum": ["training_max", "one_rep_max", "bodyweight"]
+        },
+        "exerciseId": {
+          "type": "string",
+          "description": "Canonical exercise id when referenceType is training_max or one_rep_max."
+        },
+        "firstRunnableWeekIndex": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The earliest week in which this reference is consumed, as declared by the importer. The semantic validator cross-checks this against actual usage in programStructure."
+        },
+        "supplied": {
+          "type": "boolean",
+          "description": "True once the operator has provided the value during import. Activation requires every first-week reference to be supplied."
+        },
+        "value": { "type": "number", "exclusiveMinimum": 0 },
+        "unit": { "type": "string", "enum": ["lb", "kg"] }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "supplied": { "const": true } }, "required": ["supplied"] },
+          "then": { "required": ["value", "unit"] }
+        },
+        {
+          "if": {
+            "properties": {
+              "referenceType": { "enum": ["training_max", "one_rep_max"] }
+            },
+            "required": ["referenceType"]
+          },
+          "then": { "required": ["exerciseId"] }
+        }
+      ]
+    },
+    "programStructure": {
+      "type": "object",
+      "required": ["blocks"],
+      "additionalProperties": false,
+      "properties": {
+        "roundingOverride": { "$ref": "#/$defs/roundingOverride" },
+        "blocks": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/programBlock" }
+        }
+      }
+    },
+    "programBlock": {
+      "type": "object",
+      "required": ["id", "order", "weeks"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "order": { "type": "integer", "minimum": 1 },
+        "displayName": { "type": "string", "minLength": 1 },
+        "roundingOverride": { "$ref": "#/$defs/roundingOverride" },
+        "weeks": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/programWeek" }
+        }
+      }
+    },
+    "programWeek": {
+      "type": "object",
+      "required": ["id", "weekIndex", "sessions"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "weekIndex": { "type": "integer", "minimum": 1 },
+        "sessions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/sessionTemplate" }
+        }
+      }
+    },
+    "sessionTemplate": {
+      "type": "object",
+      "required": ["id", "sessionIndex", "groups"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "sessionIndex": { "type": "integer", "minimum": 1 },
+        "dayLabel": { "type": "string", "minLength": 1 },
+        "displayName": { "type": "string", "minLength": 1 },
+        "groups": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/exerciseGroup" }
+        }
+      }
+    },
+    "exerciseGroup": {
+      "type": "object",
+      "required": ["id", "order", "kind", "prescriptionItems"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "order": { "type": "integer", "minimum": 1 },
+        "kind": {
+          "type": "string",
+          "enum": ["single", "superset", "circuit", "paired"]
+        },
+        "prescriptionItems": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/prescriptionItem" }
+        }
+      }
+    },
+    "prescriptionItem": {
+      "type": "object",
+      "required": ["id", "order", "prescribedExerciseId", "role", "setPrescriptions"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "order": { "type": "integer", "minimum": 1 },
+        "prescribedExerciseId": { "type": "string", "minLength": 1 },
+        "role": {
+          "type": "string",
+          "enum": ["working", "warmup", "top_set", "back_off", "amrap", "optional", "extra"]
+        },
+        "perSide": {
+          "type": "boolean",
+          "description": "True for per-side prescriptions (e.g. single-arm dumbbell rows)."
+        },
+        "restSecondsHint": { "type": "integer", "minimum": 0 },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["kind", "text"],
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": ["tempo", "rest_pause", "myo_reps", "free"]
+              },
+              "text": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "setPrescriptions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/setPrescription" }
+        }
+      }
+    },
+    "setPrescription": {
+      "type": "object",
+      "required": ["id", "order", "setKind", "targets"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "order": { "type": "integer", "minimum": 1 },
+        "setKind": {
+          "type": "string",
+          "enum": ["working", "warmup", "top_set", "back_off", "amrap", "optional"]
+        },
+        "targets": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/prescriptionTarget" }
+        }
+      }
+    },
+    "prescriptionTarget": {
+      "type": "object",
+      "required": ["kind"],
+      "oneOf": [
+        { "$ref": "#/$defs/exactLoadRepsTarget" },
+        { "$ref": "#/$defs/repRangeTarget" },
+        { "$ref": "#/$defs/percentTarget" },
+        { "$ref": "#/$defs/rpeTarget" },
+        { "$ref": "#/$defs/rirTarget" }
+      ]
+    },
+    "exactLoadRepsTarget": {
+      "type": "object",
+      "required": ["kind", "loadValue", "loadUnit", "reps"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "const": "exact_load_reps" },
+        "loadValue": { "type": "number", "minimum": 0 },
+        "loadUnit": { "type": "string", "enum": ["lb", "kg"] },
+        "reps": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "repRangeTarget": {
+      "type": "object",
+      "required": ["kind", "repMin", "repMax"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "const": "rep_range" },
+        "repMin": { "type": "integer", "minimum": 0 },
+        "repMax": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "percentTarget": {
+      "type": "object",
+      "required": ["kind", "percent", "referenceId"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "const": "percent" },
+        "percent": { "type": "number", "exclusiveMinimum": 0 },
+        "referenceId": { "type": "string", "minLength": 1 },
+        "reps": { "type": "integer", "minimum": 0 },
+        "amrap": { "type": "boolean" },
+        "roundingIncrement": { "type": "number", "exclusiveMinimum": 0 },
+        "roundingUnit": { "type": "string", "enum": ["lb", "kg"] }
+      }
+    },
+    "rpeTarget": {
+      "type": "object",
+      "required": ["kind"],
+      "additionalProperties": false,
+      "anyOf": [
+        { "required": ["target"] },
+        { "required": ["rangeMin", "rangeMax"] },
+        { "required": ["cap"] }
+      ],
+      "properties": {
+        "kind": { "const": "rpe" },
+        "target": { "type": "number", "minimum": 0, "maximum": 10 },
+        "rangeMin": { "type": "number", "minimum": 0, "maximum": 10 },
+        "rangeMax": { "type": "number", "minimum": 0, "maximum": 10 },
+        "cap": { "type": "number", "minimum": 0, "maximum": 10 }
+      }
+    },
+    "rirTarget": {
+      "type": "object",
+      "required": ["kind"],
+      "additionalProperties": false,
+      "anyOf": [
+        { "required": ["target"] },
+        { "required": ["rangeMin", "rangeMax"] },
+        { "required": ["floor"] }
+      ],
+      "properties": {
+        "kind": { "const": "rir" },
+        "target": { "type": "integer", "minimum": 0 },
+        "rangeMin": { "type": "integer", "minimum": 0 },
+        "rangeMax": { "type": "integer", "minimum": 0 },
+        "floor": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "progressionRule": {
+      "type": "object",
+      "required": ["id", "kind"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "minLength": 1 },
+        "appliesToExerciseIds": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "parameters": {
+          "type": "object",
+          "description": "Open object. Phase 2 keeps this extensible because progression-rule introspection lives in the Android program runner (Phase 4/6).",
+          "additionalProperties": true
+        }
+      }
+    }
+  }
+}
