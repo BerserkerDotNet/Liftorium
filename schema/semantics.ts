@@ -1,6 +1,6 @@
 import { computeProgramResourceContentHash } from './hash.js';
 
-export const SUPPORTED_SCHEMA_VERSIONS: ReadonlySet<number> = new Set([1]);
+export const SUPPORTED_SCHEMA_VERSIONS: ReadonlySet<number> = new Set([1, 2, 3]);
 
 export const KNOWN_CRITICAL_CONSTRUCT_CODES: ReadonlySet<string> = new Set([
   'construct.drop_set',
@@ -59,16 +59,21 @@ export function validateProgramResourceSemantics(resource: unknown): SemanticRep
   checkContentHash(resource, issues);
   checkExerciseCatalog(resource, issues);
   checkProgramStructure(resource, issues);
+  checkVariantWeeks(resource, issues);
+  checkPrescriptionExtensions(resource, issues);
   checkReferenceUsage(resource, issues);
   checkConstructSeverities(resource, issues);
   checkProvenance(resource, issues);
+  checkPendingReferencesStatus(resource, issues);
 
   const declaredStatus = resource['validationStatus'];
   const declaredIssues = Array.isArray(resource['validationIssues'])
     ? (resource['validationIssues'] as Array<Record<string, unknown>>)
     : [];
 
-  const declaredCritical = declaredIssues.some((i) => i['severity'] === 'critical');
+  const declaredCritical = declaredIssues.some(
+    (i) => isObject(i) && i['severity'] === 'critical',
+  );
   const semanticCritical = issues.some((i) => i.severity === 'critical');
 
   if (declaredStatus === 'activatable' && (declaredCritical || semanticCritical)) {
@@ -90,6 +95,49 @@ export function validateProgramResourceSemantics(resource: unknown): SemanticRep
   }
 
   return { activatable, issues };
+}
+
+/**
+ * Validate the `pending_runtime_references` status:
+ *   - It is only meaningful when at least one requiredReference declares
+ *     `supplied: false` AND is consumed in a first-runnable week (i.e. the
+ *     reference is the actual runtime gate).
+ *   - When this status is declared, any SEMANTIC critical other than
+ *     `reference.missing_first_week` is a misuse: the resource is not really
+ *     "pending references only"; raise `status.pending_with_blocking_critical`.
+ *   - When this status is declared but no `reference.missing_first_week`
+ *     criticals exist at all, raise `status.pending_without_pending_refs`
+ *     (warning) — the resource is in fact activatable and should declare so.
+ */
+function checkPendingReferencesStatus(
+  resource: Record<string, unknown>,
+  issues: SemanticIssue[],
+): void {
+  const declaredStatus = resource['validationStatus'];
+  if (declaredStatus !== 'pending_runtime_references') return;
+
+  const hasPendingRefCritical = issues.some(
+    (i) => i.code === 'reference.missing_first_week' && i.severity === 'critical',
+  );
+  const hasOtherCritical = issues.some(
+    (i) => i.severity === 'critical' && i.code !== 'reference.missing_first_week',
+  );
+
+  if (hasOtherCritical) {
+    issues.push({
+      code: 'status.pending_with_blocking_critical',
+      severity: 'critical',
+      message:
+        'validationStatus is pending_runtime_references but at least one critical issue other than reference.missing_first_week remains; iterate as blocked.',
+    });
+  } else if (!hasPendingRefCritical) {
+    issues.push({
+      code: 'status.pending_without_pending_refs',
+      severity: 'warning',
+      message:
+        'validationStatus is pending_runtime_references but no first-week pending references were detected; resource should be marked activatable.',
+    });
+  }
 }
 
 function checkSchemaVersion(resource: Record<string, unknown>, issues: SemanticIssue[]): void {
@@ -346,6 +394,281 @@ function checkProgramStructure(
   }
 }
 
+/**
+ * Validate programWeek.variantOf / variantLabel semantics.
+ *
+ * Variant weeks declare runtime alternates that the user picks one of. Rules
+ * enforced here (in order of emission):
+ *
+ *   1. variantOf must reference a week id that exists within the SAME block.
+ *   2. variantOf target must NOT itself have variantOf (chain depth = 1).
+ *   3. A variant group (a base week and all its variants) must occupy a
+ *      contiguous run in the block's weeks[] array; no unrelated week may
+ *      appear between them.
+ *   4. Every member of a multi-member variant group must declare variantLabel.
+ *   5. Within a single variant group, variantLabels must be unique
+ *      (case-insensitive after trimming whitespace).
+ *   6. Any resource that uses variantOf MUST declare schemaVersion >= 2.
+ */
+function checkVariantWeeks(
+  resource: Record<string, unknown>,
+  issues: SemanticIssue[],
+): void {
+  const structure = resource['programStructure'];
+  if (!isObject(structure)) return;
+  const blocks = structure['blocks'];
+  if (!Array.isArray(blocks)) return;
+
+  let anyVariant = false;
+
+  for (const block of blocks) {
+    if (!isObject(block)) continue;
+    const weeks = block['weeks'];
+    if (!Array.isArray(weeks)) continue;
+
+    const weekIds = new Set<string>();
+    const variantOfById = new Map<string, string>();
+    const labelById = new Map<string, string | undefined>();
+    const positionById = new Map<string, number>();
+
+    weeks.forEach((week, idx) => {
+      if (!isObject(week)) return;
+      const id = week['id'];
+      if (typeof id !== 'string') return;
+      weekIds.add(id);
+      positionById.set(id, idx);
+      const label = week['variantLabel'];
+      labelById.set(id, typeof label === 'string' ? label : undefined);
+      const variantOf = week['variantOf'];
+      if (typeof variantOf === 'string') {
+        anyVariant = true;
+        variantOfById.set(id, variantOf);
+      }
+    });
+
+    // Rule 1 + 2: reference resolution and chain-depth.
+    for (const [id, target] of variantOfById.entries()) {
+      if (!weekIds.has(target)) {
+        issues.push({
+          code: 'structure.unknown_variant_target',
+          severity: 'critical',
+          message: `programWeek '${id}' has variantOf '${target}' but no such week exists within the same block.`,
+        });
+        continue;
+      }
+      if (variantOfById.has(target)) {
+        issues.push({
+          code: 'structure.variant_chain_depth',
+          severity: 'critical',
+          message: `programWeek '${id}' has variantOf '${target}', which itself has variantOf; chain depth is bounded to 1.`,
+        });
+      }
+    }
+
+    // Group variants by base for the contiguity and label rules.
+    const groups = new Map<string, string[]>(); // baseId -> [baseId, ...variantIds in array order]
+    for (const week of weeks) {
+      if (!isObject(week)) continue;
+      const id = week['id'];
+      if (typeof id !== 'string') continue;
+      if (variantOfById.has(id)) continue; // skip variants on this pass
+      groups.set(id, [id]);
+    }
+    for (const [id, target] of variantOfById.entries()) {
+      const list = groups.get(target);
+      if (list) list.push(id);
+    }
+
+    for (const [baseId, members] of groups.entries()) {
+      if (members.length < 2) continue; // not a real variant group
+
+      // Rule 3: contiguous in array order. Sort members by position and check.
+      const sortedByPos = [...members].sort(
+        (a, b) => (positionById.get(a) ?? 0) - (positionById.get(b) ?? 0),
+      );
+      const first = positionById.get(sortedByPos[0]) ?? 0;
+      const last = positionById.get(sortedByPos[sortedByPos.length - 1]) ?? 0;
+      const run = last - first + 1;
+      if (run !== members.length) {
+        issues.push({
+          code: 'structure.variant_group_not_contiguous',
+          severity: 'critical',
+          message: `Variant group for base week '${baseId}' is not contiguous in weeks[] array order; an unrelated week appears between the base and one of its variants.`,
+        });
+      }
+
+      // Rule 4: variantLabel required on every member.
+      const missingLabel = members.filter((m) => {
+        const lbl = labelById.get(m);
+        return !lbl || lbl.trim() === '';
+      });
+      if (missingLabel.length > 0) {
+        issues.push({
+          code: 'structure.variant_missing_label',
+          severity: 'critical',
+          message: `Variant group for base week '${baseId}' is missing variantLabel on member(s): ${missingLabel
+            .map((id) => `'${id}'`)
+            .join(', ')}.`,
+        });
+      }
+
+      // Rule 5: unique labels (case-insensitive, trimmed).
+      const labelCounts = new Map<string, number>();
+      for (const m of members) {
+        const lbl = labelById.get(m);
+        if (typeof lbl !== 'string') continue;
+        const norm = lbl.trim().toLowerCase();
+        if (norm === '') continue;
+        labelCounts.set(norm, (labelCounts.get(norm) ?? 0) + 1);
+      }
+      const duplicates = [...labelCounts.entries()]
+        .filter(([, count]) => count > 1)
+        .map(([norm]) => norm);
+      if (duplicates.length > 0) {
+        issues.push({
+          code: 'structure.variant_duplicate_label',
+          severity: 'critical',
+          message: `Variant group for base week '${baseId}' has duplicate variantLabel value(s): ${duplicates
+            .map((d) => `'${d}'`)
+            .join(', ')}.`,
+        });
+      }
+    }
+  }
+
+  // Rule 6: schemaVersion gate. Emitted once at resource scope so it is not
+  // duplicated per offending week.
+  if (anyVariant) {
+    const version = resource['schemaVersion'];
+    if (typeof version === 'number' && version < 2) {
+      issues.push({
+        code: 'structure.variant_schema_version_too_low',
+        severity: 'critical',
+        message: `Resource uses programWeek.variantOf but declares schemaVersion ${version}; variants require schemaVersion >= 2 so variant-unaware loaders reject the resource.`,
+      });
+    }
+  }
+}
+
+/**
+ * Validate percentTarget range form, restMaxSecondsHint, and warmupSetCount.
+ * Each of these features requires schemaVersion >= 3 so older loaders reject
+ * resources they cannot interpret.
+ *
+ * Rules enforced:
+ *   1. percentMin < percentMax (rejects equal — extractor normalizes equal
+ *      ranges to the single-percent form).
+ *   2. restMaxSecondsHint > restSecondsHint when both present (warning; the
+ *      runtime can clamp).
+ *   3. Schema-version gates fire once at resource scope per feature, mirroring
+ *      the variant gate.
+ */
+function checkPrescriptionExtensions(
+  resource: Record<string, unknown>,
+  issues: SemanticIssue[],
+): void {
+  const structure = resource['programStructure'];
+  if (!isObject(structure)) return;
+  const blocks = structure['blocks'];
+  if (!Array.isArray(blocks)) return;
+
+  let usesPercentRange = false;
+  let usesRestRange = false;
+  let usesWarmupCount = false;
+
+  for (const block of blocks) {
+    if (!isObject(block)) continue;
+    const weeks = block['weeks'];
+    if (!Array.isArray(weeks)) continue;
+    for (const week of weeks) {
+      if (!isObject(week)) continue;
+      const sessions = week['sessions'];
+      if (!Array.isArray(sessions)) continue;
+      for (const session of sessions) {
+        if (!isObject(session)) continue;
+        const groups = session['groups'];
+        if (!Array.isArray(groups)) continue;
+        for (const group of groups) {
+          if (!isObject(group)) continue;
+          const items = group['prescriptionItems'];
+          if (!Array.isArray(items)) continue;
+          for (const item of items) {
+            if (!isObject(item)) continue;
+            const itemId = typeof item['id'] === 'string' ? item['id'] : '<unknown>';
+
+            if (typeof item['warmupSetCount'] === 'number') {
+              usesWarmupCount = true;
+            }
+
+            const restMin = item['restSecondsHint'];
+            const restMax = item['restMaxSecondsHint'];
+            if (typeof restMax === 'number') {
+              usesRestRange = true;
+              if (typeof restMin === 'number' && restMax <= restMin) {
+                issues.push({
+                  code: 'item.rest_range_invalid',
+                  severity: 'warning',
+                  message: `prescriptionItem '${itemId}' has restMaxSecondsHint ${restMax} <= restSecondsHint ${restMin}; expected max strictly greater than min.`,
+                });
+              }
+            }
+
+            const sets = item['setPrescriptions'];
+            if (!Array.isArray(sets)) continue;
+            for (const set of sets) {
+              if (!isObject(set)) continue;
+              const setId = typeof set['id'] === 'string' ? set['id'] : '<unknown>';
+              const targets = set['targets'];
+              if (!Array.isArray(targets)) continue;
+              for (const target of targets) {
+                if (!isObject(target)) continue;
+                if (target['kind'] !== 'percent') continue;
+                const pMin = target['percentMin'];
+                const pMax = target['percentMax'];
+                if (typeof pMin === 'number' || typeof pMax === 'number') {
+                  usesPercentRange = true;
+                }
+                if (typeof pMin === 'number' && typeof pMax === 'number' && pMin >= pMax) {
+                  issues.push({
+                    code: 'target.percent_range_invalid',
+                    severity: 'critical',
+                    message: `percentTarget in setPrescription '${setId}' has percentMin ${pMin} >= percentMax ${pMax}; expected min strictly less than max (extractor normalizes equal values to single-percent form).`,
+                  });
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  const version = resource['schemaVersion'];
+  const v = typeof version === 'number' ? version : 0;
+
+  if (usesPercentRange && v < 3) {
+    issues.push({
+      code: 'structure.percent_range_schema_version_too_low',
+      severity: 'critical',
+      message: `Resource uses percentTarget range form (percentMin/percentMax) but declares schemaVersion ${version}; range form requires schemaVersion >= 3 so range-unaware loaders reject the resource.`,
+    });
+  }
+  if (usesRestRange && v < 3) {
+    issues.push({
+      code: 'structure.rest_range_schema_version_too_low',
+      severity: 'critical',
+      message: `Resource uses prescriptionItem.restMaxSecondsHint but declares schemaVersion ${version}; rest-range form requires schemaVersion >= 3.`,
+    });
+  }
+  if (usesWarmupCount && v < 3) {
+    issues.push({
+      code: 'structure.warmup_count_schema_version_too_low',
+      severity: 'critical',
+      message: `Resource uses prescriptionItem.warmupSetCount but declares schemaVersion ${version}; warmupSetCount requires schemaVersion >= 3.`,
+    });
+  }
+}
+
 function checkReferenceUsage(
   resource: Record<string, unknown>,
   issues: SemanticIssue[],
@@ -431,13 +754,23 @@ function walkPercentTargets(
   if (!isObject(structure)) return;
   const blocks = structure['blocks'];
   if (!Array.isArray(blocks)) return;
+
+  // Effective-week-index resolution: when a week declares variantOf, percent
+  // targets it owns should be attributed to the base week's index, so the
+  // first-runnable-week reference checks key off the runtime position rather
+  // than the structural position in the linear array. Chain depth is bounded
+  // to 1 by checkVariantWeeks; we still defensively cap one indirection here.
+  const variantBaseIndex = buildVariantBaseIndexMap(blocks);
+
   for (const block of blocks) {
     if (!isObject(block)) continue;
     const weeks = block['weeks'];
     if (!Array.isArray(weeks)) continue;
     for (const week of weeks) {
       if (!isObject(week)) continue;
-      const weekIndex = typeof week['weekIndex'] === 'number' ? week['weekIndex'] : 0;
+      const ownIndex = typeof week['weekIndex'] === 'number' ? week['weekIndex'] : 0;
+      const weekId = typeof week['id'] === 'string' ? week['id'] : '';
+      const effectiveIndex = variantBaseIndex.get(weekId) ?? ownIndex;
       const sessions = week['sessions'];
       if (!Array.isArray(sessions)) continue;
       for (const session of sessions) {
@@ -459,7 +792,7 @@ function walkPercentTargets(
               for (const target of targets) {
                 if (!isObject(target)) continue;
                 if (target['kind'] === 'percent' && typeof target['referenceId'] === 'string') {
-                  visit(target['referenceId'], weekIndex);
+                  visit(target['referenceId'], effectiveIndex);
                 }
               }
             }
@@ -468,6 +801,37 @@ function walkPercentTargets(
       }
     }
   }
+}
+
+function buildVariantBaseIndexMap(
+  blocks: readonly unknown[],
+): Map<string, number> {
+  const map = new Map<string, number>();
+  for (const block of blocks) {
+    if (!isObject(block)) continue;
+    const weeks = block['weeks'];
+    if (!Array.isArray(weeks)) continue;
+    const indexById = new Map<string, number>();
+    for (const week of weeks) {
+      if (!isObject(week)) continue;
+      const id = week['id'];
+      const wi = week['weekIndex'];
+      if (typeof id === 'string' && typeof wi === 'number') {
+        indexById.set(id, wi);
+      }
+    }
+    for (const week of weeks) {
+      if (!isObject(week)) continue;
+      const id = week['id'];
+      const variantOf = week['variantOf'];
+      if (typeof id !== 'string' || typeof variantOf !== 'string') continue;
+      const baseIndex = indexById.get(variantOf);
+      if (typeof baseIndex === 'number') {
+        map.set(id, baseIndex);
+      }
+    }
+  }
+  return map;
 }
 
 function checkConstructSeverities(
@@ -522,7 +886,6 @@ function checkProvenance(
   if (!isObject(audit)) return;
   const sourceKind = audit['sourceKind'];
   const sourceHash = audit['sourceHash'];
-  const consent = audit['consentGranted'];
 
   const ZERO_HASH = '0'.repeat(64);
 
@@ -533,14 +896,6 @@ function checkProvenance(
         severity: 'warning',
         message:
           'private_import resources must carry a real SHA-256 source hash; received the synthetic zero sentinel.',
-      });
-    }
-    if (consent !== true) {
-      issues.push({
-        code: 'provenance.private_import_missing_consent',
-        severity: 'warning',
-        message:
-          'private_import resources must record explicit consentGranted=true; full consent gating is enforced by the import workflow.',
       });
     }
   } else if (sourceKind === 'synthetic') {

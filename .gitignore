@@ -38,4 +38,19 @@ credentials.*
 
 # --- Local sample materials (never commit private program sources) ---
 samples/
-private/
+# `private/*` (NOT `private/`) excludes only the CONTENTS of private/, so
+# the directory remains traversable and the negation patterns below can
+# re-include specific paths. A `private/` rule would block traversal
+# entirely and any `!private/...` exception would be silently ignored.
+private/*
+
+# Exception: the `private/imports/` folder is the canonical output sink for
+# the `import-workflow` skill (produced `<programVersionId>.json` + sidecar
+# `.import-report.json` artifacts). The directory itself is committed so the
+# skill can reference a stable path; its CONTENTS stay gitignored because
+# imported program data may be proprietary. To commit a synthetic / non-
+# proprietary fixture from here, the operator must add an explicit negation.
+!private/imports/
+private/imports/*
+!private/imports/.gitkeep
+!private/imports/README.md

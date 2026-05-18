@@ -23,6 +23,8 @@
 - Prescription calculation helpers.
 - Snapshot fields consumed by workout logging/history.
 - Clear blockers for missing required max/reference values.
+- Target specificity resolver: when a set carries multiple targets, pick the most specific available in this priority — (1) actual prescribed weight (range or single), (2) `percent`/`percentMin`+`percentMax` against a `training_max` / `one_rep_max` reference, (3) `rpe` / `rir`. When percent and RPE coexist (conjunctive), display the calculated weight AND the RPE companion; never drop one.
+- Range expansion: when a percent range or weight range is present, compute BOTH bounds, round each per the program's rounding rules, and surface a "min–max" UI label (e.g. "150–160 lb at 75–80%"). Equal bounds collapse to a single value.
 
 ## Contracts not to break
 
@@ -30,6 +32,8 @@
 - Historical workouts keep calculation snapshots unchanged.
 - First-week missing maxes block activation; later missing maxes block affected workout start.
 - Rounding follows default and override precedence.
+- Target specificity order is fixed: weight > percent > RPE/RIR. A more-specific target never silently replaces a less-specific one's metadata (e.g. the RPE companion of a conjunctive set stays visible).
+- Range-target calculation snapshots store BOTH the min and max calculated weight, not just one bound.
 
 ## Tests and evidence required
 

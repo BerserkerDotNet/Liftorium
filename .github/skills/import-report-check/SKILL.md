@@ -20,7 +20,8 @@ description: Use when reviewing Liftorium spreadsheet import reports for activat
 - Source provenance is recorded without bundling source content.
 - Unsupported constructs map to structured, note-only, or critical classifications.
 - Operator approval status is explicit.
-- Explicit cloud-processing consent is recorded before source-derived AI processing.
+- Explicit operator approval is recorded for unknown exercises and
+  for any matrix-permitted construct classification overrides.
 - The report answers: can the operator safely run this without opening the original spreadsheet?
 - Each issue has severity, code, source reference, affected program area, operator action, and activation impact.
 - Source excerpts are minimized; use filenames, hashes, sheet names, and cell references.

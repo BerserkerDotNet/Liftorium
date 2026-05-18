@@ -6,9 +6,11 @@
   "description": "Versioned Liftorium program-resource JSON Schema, fixtures, and Ajv-based validator. Used by tools/import (Phase 3) to validate finalized resources and by Android's ProgramResourceLoader (Phase 4) to validate before runtime load.",
   "scripts": {
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "refresh-fixture-hashes": "node scripts/refresh-fixture-hashes.mjs"
+    "refresh-fixture-hashes": "node scripts/refresh-fixture-hashes.mjs",
+    "validate:resource": "tsx scripts/validate-resource.ts"
   },
   "dependencies": {
     "ajv": "8.17.1",
@@ -16,6 +18,8 @@
   },
   "devDependencies": {
     "@types/node": "^25.8.0",
+    "@vitest/coverage-v8": "^2.1.9",
+    "tsx": "^4.19.2",
     "typescript": "5.6.3",
     "vitest": "2.1.9"
   }

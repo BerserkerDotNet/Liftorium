@@ -29,6 +29,8 @@
 - Every user-visible mutation is transactional.
 - Raw logs are authoritative.
 - Workout logging must remain usable when timer permission is denied.
+- When a prescription item declares `warmupSetCount > 0`, the logging UI presents that many warm-up set rows distinct from working sets; warm-up logs do not contribute to PR/e1RM derivation. When the field is absent, no warm-up rows are auto-generated.
+- Conjunctive percent + RPE prescriptions log both the calculated weight and the RPE companion on the set; neither is dropped on save.
 
 ## Tests and evidence required
 

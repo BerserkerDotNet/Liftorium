@@ -80,7 +80,7 @@ Snapshot rules:
 
 ### Developer-time boundary
 
-The import workflow is developer/operator-facing. It can use Copilot after explicit per-import consent. It outputs app-ready resources and reports; it is not part of workout runtime.
+The import workflow is developer/operator-facing. The developer running the import-workflow skill in a Copilot session IS the cloud-assisted processor; no separate consent prompt is shown. It outputs app-ready resources and reports; it is not part of workout runtime.
 
 ## Planned repository layout
 
@@ -479,6 +479,15 @@ A resource is activatable only when:
 - Schedule ordering is unambiguous.
 - Unsupported constructs are absent or classified as note-only.
 
+### Week variants (runtime alternates)
+
+Some programs include weeks where the user chooses ONE of multiple templates and runs only that template before moving to the next sequential week (e.g. a PR test week vs a volume week occupying the same logical slot). The schema models this with two optional fields on `programWeek`:
+
+- `variantOf` — id of another `programWeek` in the SAME block. The week declaring `variantOf` is an alternate of the base week.
+- `variantLabel` — operator-facing label distinguishing this variant within its group (e.g. "A", "B"). Required on every member of a multi-member group; labels must be unique within the group.
+
+Semantic rules: variant groups must be contiguous in the block's `weeks[]` array; chain depth is bounded to 1 (no variant of a variant); reference validation uses the BASE week's `weekIndex` when a required reference is consumed only inside a variant. Resources that use `variantOf` MUST declare `schemaVersion >= 2`. Variant-unaware loaders MUST reject `schemaVersion >= 2` rather than silently running every week of a variant group sequentially. Phase 4 `ProgramResourceLoader` owns the runtime presentation of the variant choice and the recording of which variant the user picked, so progression and stats only count the executed variant. See `docs/decisions.md` 2026-05-17 *programWeek runtime variants*.
+
 ### Duplicate and partial import handling
 
 - Resource load occurs in one transaction.
@@ -507,16 +516,10 @@ sequenceDiagram
     participant Store as Resource output
 
     Op->>Skill: Start import with spreadsheet path
-    Skill->>Op: Request explicit cloud-processing consent
-    alt consent granted
-        Skill->>Parser: Extract workbook structure, formulas, merged cells, cell refs
-        Parser-->>Skill: Structured workbook model
-        Skill->>AI: Send approved source-derived content
-        AI-->>Skill: Draft mapping/corrections
-    else consent denied
-        Skill->>Parser: Local metadata/structure extraction only
-        Parser-->>Skill: Structured workbook model
-    end
+    Skill->>Parser: Extract workbook structure, formulas, merged cells, cell refs
+    Parser-->>Skill: Structured workbook model
+    Skill->>AI: Send approved source-derived content
+    AI-->>Skill: Draft mapping/corrections
     Skill->>Validator: Build draft resource and report
     Validator-->>Skill: Critical/warning/info issues
     loop correction until no critical issues
@@ -542,7 +545,7 @@ sequenceDiagram
 ### Import privacy
 
 - Original source files are private.
-- Cloud-assisted processing requires explicit per-import consent.
+- The developer running the import-workflow skill is the cloud-assisted processor; no separate consent prompt is shown.
 - Store filename, hash, import date, sheet names, and cell references where needed.
 - Avoid storing proprietary excerpts unless strictly necessary and explicitly approved.
 - Do not commit source spreadsheets or PDFs by default.
@@ -999,14 +1002,9 @@ Web MVP must enforce read-only scope mechanically:
 - Components may import read-only hooks only.
 - Web copy must not claim offline workout logging or locked/background timer support.
 
-### Import privacy and consent contract
+### Import privacy contract
 
-Before cloud-assisted processing of source-derived content:
-
-- Show explicit per-import consent.
-- Explain that source-derived spreadsheet content may be processed by Copilot.
-- Explain that original source files are not bundled or committed by default.
-- Allow the operator to cancel before cloud-assisted processing.
+The import workflow is invoked by a developer in a Copilot session against a workbook they tagged. That action is the operator's intent; no separate consent prompt is shown.
 
 Stored provenance may include:
 

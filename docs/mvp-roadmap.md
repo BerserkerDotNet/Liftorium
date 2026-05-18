@@ -19,7 +19,7 @@ Do not carry unrelated workstream context into the session unless a dependency r
 | --- | --- | --- | --- |
 | 1 | `foundation` | Project setup, module layout, verification command skeletons | All implementation workstreams |
 | 2 | `program-resources` | Versioned JSON resource schema, validation, fixtures, activation rules | Import workflow, Android program runner, Web resource snapshots |
-| 3 | `import-workflow` | Spreadsheet import, consent, validation reports, correction loop, finalized resources | Android runnable content, Web report review |
+| 3 | `import-workflow` | Spreadsheet import, validation reports, correction loop, finalized resources | Android runnable content, Web report review |
 | 4 | `android-program-runner` | Program resource loading into Room, program library, active run, version pinning, schedule entry | Android workout logging |
 | 5 | `android-workout-logging` | Offline active workout, tap-by-tap persistence, recovery | Max/progression, substitutions, timers, stats |
 | 6 | `android-training-max-progression` | Training maxes, percent work, rounding, progression | Workout prescriptions, stats caveats |

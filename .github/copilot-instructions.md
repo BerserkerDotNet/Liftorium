@@ -7,7 +7,7 @@ Keep this file short. It records repo-wide guardrails that apply to all work. Pr
 - Android primary: Kotlin, Jetpack Compose, Material 3, Room/SQLite, coroutines/Flow.
 - Web secondary: TypeScript strict mode, React, Vite, read-only snapshot surfaces.
 - Program resources: versioned JSON Schema.
-- Import: spreadsheet-first developer-time Copilot workflow with explicit per-import consent before cloud-assisted source processing.
+- Import: spreadsheet-first developer-time Copilot workflow. The developer running the import-workflow skill in a Copilot session IS the cloud-assisted processor; no separate consent prompt is shown.
 - MVP has no account or cloud sync, but persisted data must be sync-ready.
 
 ## Before non-trivial work
@@ -17,6 +17,17 @@ Keep this file short. It records repo-wide guardrails that apply to all work. Pr
 3. State needed outcomes directly; relevant project skills should be auto-discovered from their descriptions.
 4. Use `ask_user` before major product, architecture, privacy, data-loss, or testing-scope decisions; if unavailable, stop and report the decision blocker.
 5. Record major decisions in `docs/decisions.md`. Supersede old decisions with new entries instead of rewriting history.
+
+## After non-trivial work
+
+When a change affects a cross-layer contract (schema enum/state, validation rule, runtime API surface, skill workflow, exit-code set, or any existing invariant), propagation IS part of the feature. Before declaring done:
+
+1. Sweep `docs/workstreams/*.md`. For every workstream whose Outputs or Contracts reference the changed surface, extend that section with the new contract values, invariants, or behaviors. Include any schemaVersion-compatibility tables if the change crosses a version boundary.
+2. Sweep `.github/skills/*/SKILL.md`. For every skill whose instructions enumerate the changed values (exit codes, validation status values, target-priority tables, parsing patterns, step references), update each table or step in the same change. Do not leave drift for the next dogfooder to discover.
+3. Update `schema/README.md` issue-code table and `docs/decisions.md` (new ADR entry) when the change adds/renames issue codes or alters the activation gate.
+4. Store cross-session memories (`store_memory`) for facts that outlive this branch — new enum values, new priority orderings, new canonicalisation rules.
+
+Do not wait for the user to ask "did you update X?" — treat each of the four sweeps as a checklist item that must complete before the feature ships.
 
 ## Skill use
 
@@ -63,7 +74,6 @@ Use natural task requests that match skill descriptions, such as validating chan
 - Unsupported imported constructs are critical unless the Program Construct Matrix classifies them as structured or note-only.
 - Unknown exercises require approved alias/canonical mappings.
 - First-week missing max/reference values block activation; later missing values must block affected workout start.
-- Cloud-assisted import requires explicit per-import consent before source-derived AI processing.
 
 ## Testing conventions
 

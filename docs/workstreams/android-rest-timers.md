@@ -30,6 +30,7 @@
 - Notification denial blocks timer start only.
 - Workout logging remains usable without timer permission.
 - Locked-phone timer behavior must be verified on target API.
+- When a prescription item carries a rest range (`restSecondsHint` + `restMaxSecondsHint`), the timer uses `restSecondsHint` as the default countdown and surfaces the upper bound in the UI; the user can extend up to `restMaxSecondsHint` without it counting as an override.
 
 ## Tests and evidence required
 

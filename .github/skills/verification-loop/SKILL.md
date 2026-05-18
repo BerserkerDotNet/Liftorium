@@ -25,6 +25,7 @@ All commands are run from the repository root unless noted.
 | --- | --- | --- | --- |
 | Domain unit tests (incl. architecture guard) | `cd android; .\gradlew.bat :domain:test --console=plain` | passes now, JDK 21 on PATH | Any change to `:domain` or to the framework-independence guarantee |
 | Core unit tests | `cd android; .\gradlew.bat :core:test --console=plain` | passes now, JDK 21 on PATH | Any change to `:core` |
+| Domain+data+core coverage gate (Kover, ≥95% LINE/BRANCH/INSTRUCTION) | `cd android; .\gradlew.bat koverVerify --console=plain` | passes now, JDK 21 + SDK 34 on machine | Any change that adds or modifies behavior in `:core`, `:data`, or `:domain`. Counter mapping is platform-native: Kover has no METHOD counter, so vitest "functions" is approximated by INSTRUCTION. See `.github/skills/test-design/SKILL.md` Appendix A and the Exclusion Contract in `docs/decisions.md`. |
 
 ### Android — modules requiring the Android SDK platform
 
@@ -47,6 +48,7 @@ These commands need `platforms;android-34` and `build-tools;34.0.0` installed lo
 | Web typecheck | `cd web; npm run typecheck` | passes now | Any change under `web/` |
 | Web unit/component tests | `cd web; npm test` | passes now | Any change under `web/` |
 | Web production build | `cd web; npm run build` | passes now | Any change that ships to the Web release surface |
+| Web domain+data coverage gate (vitest, ≥95% on all four metrics) | `cd web; npm run test:coverage` | passes now (vacuous pass until `src/data/` or `src/domain/` lands; preflight `scripts/coverage-guard.mjs` fails the gate if either dir exists but contains zero source files) | Any change that adds or modifies behavior in `web/src/data/**` or `web/src/domain/**`. UI is excluded by config. See `.github/skills/test-design/SKILL.md` Appendix B. |
 | Web read-only guard | (registered when the first Web data client lands) | gated: no Web data client yet (Phase 10) | Web data client, persistence, protected-domain, or capability copy change |
 
 ### Schema / program resources
@@ -55,6 +57,7 @@ These commands need `platforms;android-34` and `build-tools;34.0.0` installed lo
 | --- | --- | --- | --- |
 | Program-resource schema validation | `cd schema; npm test` | passes now | Any change to `schema/program-resource.schema.json`, the semantic validator (`schema/semantics.ts`), the content-hash helper (`schema/hash.ts`), fixtures, or examples |
 | Program-resource TypeScript typecheck | `cd schema; npm run typecheck` | passes now | Any change to `schema/*.ts` or `schema/test/*.ts` |
+| Schema domain coverage gate (vitest, ≥95% on all four metrics) | `cd schema; npm run test:coverage` | passes now | Any change to `schema/validator.ts`, `schema/semantics.ts`, or `schema/hash.ts`. CLI scripts under `schema/scripts/` and fixtures are excluded by config. See `.github/skills/test-design/SKILL.md` Appendix C. |
 | Refresh fixture/example content hashes | `cd schema; npm run refresh-fixture-hashes` | passes now | Any edit to a fixture or example under `schema/fixtures/` (except `blocked-content-hash-mismatch.json`) or `schema/examples/`. Must be run before `npm test` so the hash-freshness assertions pass. |
 
 ### Tools
@@ -63,7 +66,7 @@ These commands need `platforms;android-34` and `build-tools;34.0.0` installed lo
 | --- | --- | --- | --- |
 | Import tooling typecheck | `cd tools\import; npm run typecheck` | passes now | Any change under `tools/import` |
 | Import tooling smoke tests | `cd tools\import; npm test` | passes now | Any change under `tools/import` |
-| Import report validation | (added by Phase 3 once a real importer exists) | gated: no importer yet (Phase 3) | Import pipeline changes |
+| Import report validation | `cd schema; npm run validate:resource -- ..\private\imports\<programVersionId>.json` (single resource produced by `import-workflow` skill) and `cd schema; npm test` (schema baseline) | passes now | Import pipeline changes |
 
 ## Workflow
 

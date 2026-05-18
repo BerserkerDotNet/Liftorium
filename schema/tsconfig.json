@@ -14,5 +14,5 @@
     "noEmit": true,
     "types": ["vitest/globals", "node"]
   },
-  "include": ["validator.ts", "hash.ts", "semantics.ts", "test", "vitest.config.ts"]
+  "include": ["validator.ts", "hash.ts", "semantics.ts", "test", "vitest.config.ts", "scripts/validate-resource.ts"]
 }

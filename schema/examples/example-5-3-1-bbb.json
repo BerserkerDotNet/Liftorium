@@ -6,7 +6,7 @@
     "versionLabel": "5/3/1 BBB v1",
     "displayName": "5/3/1 BBB",
     "authorAttribution": "Synthetic Liftorium fixture",
-    "contentHash": "79f1135080fcf5f32e4eb1c73a1456833e8e516a0beced494b8378279378da9c"
+    "contentHash": "cdf2810423fba66264e2679c4422e14c504101d181bc527d24453cf3c635b67c"
   },
   "validationStatus": "activatable",
   "validationIssues": [],
@@ -15,7 +15,6 @@
     "sourceFilename": "synthetic-5-3-1-bbb.xlsx",
     "importedAtUtc": "2026-05-16T00:00:00Z",
     "sourceKind": "synthetic",
-    "consentGranted": false,
     "schemaVersionUsed": 1
   },
   "programDefaults": {

@@ -29,6 +29,9 @@
 - Program run entities with immutable program version references.
 - Schedule occurrence model that keeps planned and actual dates distinct.
 - Active workout entry contract for `android-workout-logging`.
+- Pending-references activation flow: when `validationStatus == pending_runtime_references`, prompt the user for the unsupplied training-max / 1RM values, inject them into the in-memory resource (set each `requiredReference.supplied = true` with `value` + `unit`), re-run schema + semantics validation, and only persist + activate when the result becomes `activatable` (or `activatable_with_warnings`). Reject with a structured error if any non-pending-ref critical reappears.
+- Week-variant selection UI: when a week declares variants (e.g. 10A / 10B via `variantOf`), the runner picks ONE variant per program run; the choice is persisted with the run.
+- schemaVersion compatibility gate: refuse to load any resource whose `schemaVersion` exceeds the runner's supported set, with a clear "update the app" message. Phase 4 MVP targets schemaVersion 3.
 
 ## Contracts not to break
 
@@ -40,6 +43,8 @@
 - One active program run at a time in MVP.
 - Repeating a program creates separate run history.
 - Schedule state is distinct from workout completion.
+- `pending_runtime_references` artifacts MUST NOT be persisted as activated until all referenced TMs are supplied AND re-validation passes. Activation must NOT silently downgrade `reference.missing_first_week` criticals.
+- Range targets (`percentMin`/`percentMax`), conjunctive percent + RPE targets, range rest (`restMaxSecondsHint`), and structured warm-up counts (`warmupSetCount`) must round-trip into Room without losing range bounds, the RPE companion, or the warm-up count.
 
 ## Tests and evidence required
 

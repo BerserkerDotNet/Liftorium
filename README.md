@@ -62,7 +62,7 @@ npm install && npm test
 
 Liftorium is intentionally local-first and privacy-conscious:
 
-- Private program materials (PDFs, spreadsheets) are never committed and never transmitted without explicit per-import consent.
+- Private program materials (PDFs, spreadsheets) are never committed; conversion to schema-compliant JSON happens at developer time via the `import-workflow` skill and is initiated by the developer themselves.
 - Program-resource fixtures in this repo are synthetic and marked as such (`sourceKind: "synthetic"`, sentinel content hash).
 - The MVP has no cloud backend, no account service, and no telemetry.
 

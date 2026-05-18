@@ -80,13 +80,15 @@ the Android loader should treat unknown codes as `critical` by default.
 | --- | --- |
 | `schema.*` | `schema.malformed_root`, `schema.version_unsupported`, `schema.audit_version_mismatch` |
 | `metadata.*` | `metadata.content_hash_mismatch` |
-| `status.*` | `status.activatable_with_critical` |
+| `status.*` | `status.activatable_with_critical`, `status.pending_with_blocking_critical`, `status.pending_without_pending_refs` |
 | `catalog.*` | `catalog.duplicate_exercise_id`, `catalog.duplicate_alias_text` |
-| `structure.*` | `structure.no_runnable_week`, `structure.duplicate_id`, `structure.duplicate_order`, `structure.ambiguous_week_order`, `structure.ambiguous_session_order` |
+| `structure.*` | `structure.no_runnable_week`, `structure.duplicate_id`, `structure.duplicate_order`, `structure.ambiguous_week_order`, `structure.ambiguous_session_order`, `structure.unknown_variant_target`, `structure.variant_chain_depth`, `structure.variant_group_not_contiguous`, `structure.variant_missing_label`, `structure.variant_duplicate_label`, `structure.variant_schema_version_too_low`, `structure.percent_range_schema_version_too_low`, `structure.rest_range_schema_version_too_low`, `structure.warmup_count_schema_version_too_low` |
 | `exercise.*` | `exercise.unknown_reference` |
 | `reference.*` | `reference.unknown`, `reference.missing_first_week`, `reference.missing_later_week`, `reference.declared_week_mismatch`, `reference.unused_declaration` |
 | `construct.*` | `construct.severity_understated`, `construct.severity_overstated`, `construct.must_be_critical`, plus the per-construct codes the importer emits (`construct.drop_set`, `construct.density_emom`, `construct.for_time`, `construct.unsupported_autoregulation`, `construct.unknown`, `construct.tempo`, `construct.rest_pause`, `construct.myo_reps`) |
-| `provenance.*` | `provenance.private_import_zero_hash`, `provenance.private_import_missing_consent`, `provenance.synthetic_with_real_hash` |
+| `target.*` | `target.percent_range_invalid` |
+| `item.*` | `item.rest_range_invalid` |
+| `provenance.*` | `provenance.private_import_zero_hash`, `provenance.synthetic_with_real_hash` |
 
 The Program Construct Matrix in `docs/architecture.md` is the source of
 truth for which construct codes are `critical` vs `warning`. The semantic
@@ -99,9 +101,8 @@ validator enforces that alignment with `construct.severity_understated`,
   sentinel as `sourceHash` so private spreadsheets never need to be
   named or hashed for tests.
 - `private_import` — real operator spreadsheets. Requires a real
-  64-hex SHA-256 `sourceHash` and `consentGranted: true`; missing
-  either emits a `provenance.*` warning. Full per-import consent
-  enforcement lives in the Phase 3 import workflow.
+  64-hex SHA-256 `sourceHash`; the synthetic zero sentinel emits a
+  `provenance.private_import_zero_hash` warning.
 
 ## Content hash refresh workflow
 

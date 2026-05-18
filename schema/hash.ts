@@ -59,7 +59,9 @@ export function canonicalJsonStringify(value: unknown): string {
   const entries = Object.entries(value as Record<string, unknown>).filter(
     ([, v]) => typeof v !== 'undefined',
   );
-  entries.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  // Object.entries returns unique string keys, so the comparator never
+  // needs an "equal" branch. Use a 2-arm comparator for honest coverage.
+  entries.sort(([a], [b]) => (a < b ? -1 : 1));
   return (
     '{' +
     entries

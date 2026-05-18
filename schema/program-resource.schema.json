@@ -20,7 +20,7 @@
     "schemaVersion": {
       "type": "integer",
       "minimum": 1,
-      "description": "Monotonically increasing program-resource schema version. Phase 2 uses 1."
+      "description": "Monotonically increasing program-resource schema version. Phase 2 starts at 1. Bump to 2 when the resource uses programWeek.variantOf (week-level runtime alternates). Bump to 3 when the resource uses any of: percentTarget range form (percentMin+percentMax), prescriptionItem.restMaxSecondsHint, or prescriptionItem.warmupSetCount. Loaders that do not understand a higher schemaVersion must reject the resource."
     },
     "metadata": { "$ref": "#/$defs/metadata" },
     "validationStatus": { "$ref": "#/$defs/validationStatus" },
@@ -84,8 +84,8 @@
     },
     "validationStatus": {
       "type": "string",
-      "enum": ["activatable", "blocked", "rejected"],
-      "description": "Aggregate activation gate. 'activatable' means no critical issues remain and ProgramResourceLoader will accept this resource. 'blocked' means critical issues remain; the operator can iterate. 'rejected' means the resource cannot be retried without re-import and is never activatable."
+      "enum": ["activatable", "pending_runtime_references", "blocked", "rejected"],
+      "description": "Aggregate activation gate. 'activatable' means no critical issues remain and ProgramResourceLoader will accept this resource as-is. 'pending_runtime_references' means the resource is structurally complete at import time, and the only remaining criticals are first-week reference.missing_first_week entries for runtime-pending training_max / one_rep_max references that the loader injects from the user profile at activation. 'blocked' means critical issues remain that the operator must iterate on. 'rejected' means the resource cannot be retried without re-import and is never activatable."
     },
     "validationIssue": {
       "type": "object",
@@ -116,7 +116,6 @@
         "sourceFilename",
         "importedAtUtc",
         "sourceKind",
-        "consentGranted",
         "schemaVersionUsed"
       ],
       "additionalProperties": false,
@@ -139,11 +138,7 @@
         "sourceKind": {
           "type": "string",
           "enum": ["synthetic", "private_import"],
-          "description": "Provenance discriminator. 'synthetic' permits the all-zero sentinel hash and stub filename for fixtures and examples. 'private_import' requires real provenance and consent."
-        },
-        "consentGranted": {
-          "type": "boolean",
-          "description": "True when the operator granted explicit consent for cloud-assisted import before source-derived AI processing."
+          "description": "Provenance discriminator. 'synthetic' permits the all-zero sentinel hash and stub filename for fixtures and examples. 'private_import' marks a real operator spreadsheet and requires a real sourceHash."
         },
         "schemaVersionUsed": {
           "type": "integer",
@@ -274,6 +269,16 @@
       "properties": {
         "id": { "type": "string", "minLength": 1 },
         "weekIndex": { "type": "integer", "minimum": 1 },
+        "variantOf": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Optional id of another programWeek within the SAME block. When set, this week is an alternate of variantOf; the runtime presents the base week and all its variants as a one-of choice and only the chosen week is executed. Chain depth is 1 (the target must not itself have variantOf). Resources that use this field MUST declare schemaVersion >= 2; variant-unaware loaders must reject schemaVersion 1 resources only."
+        },
+        "variantLabel": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Operator-facing short label distinguishing this variant within its group (e.g. 'A', 'B', 'heavy'). Required on every member of a multi-member variant group; labels within a group must be unique."
+        },
         "sessions": {
           "type": "array",
           "items": { "$ref": "#/$defs/sessionTemplate" }
@@ -316,6 +321,9 @@
       "type": "object",
       "required": ["id", "order", "prescribedExerciseId", "role", "setPrescriptions"],
       "additionalProperties": false,
+      "dependentRequired": {
+        "restMaxSecondsHint": ["restSecondsHint"]
+      },
       "properties": {
         "id": { "type": "string", "minLength": 1 },
         "order": { "type": "integer", "minimum": 1 },
@@ -328,7 +336,21 @@
           "type": "boolean",
           "description": "True for per-side prescriptions (e.g. single-arm dumbbell rows)."
         },
-        "restSecondsHint": { "type": "integer", "minimum": 0 },
+        "restSecondsHint": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Rest hint in seconds. When restMaxSecondsHint is also present, this is the lower bound of a range; otherwise a single recommended rest. Requires schemaVersion >= 3 to be the lower bound of a range."
+        },
+        "restMaxSecondsHint": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Optional upper bound for the rest range. Requires restSecondsHint to also be present (dependentRequired). Requires schemaVersion >= 3."
+        },
+        "warmupSetCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Optional structured count of source-prescribed warm-up sets when the source does not specify per-set loads or reps. Runtime fills in the actual warm-up scheme. Requires schemaVersion >= 3."
+        },
         "notes": {
           "type": "array",
           "items": {
@@ -402,11 +424,40 @@
     },
     "percentTarget": {
       "type": "object",
-      "required": ["kind", "percent", "referenceId"],
+      "required": ["kind", "referenceId"],
       "additionalProperties": false,
+      "oneOf": [
+        {
+          "required": ["percent"],
+          "not": {
+            "anyOf": [
+              { "required": ["percentMin"] },
+              { "required": ["percentMax"] }
+            ]
+          }
+        },
+        {
+          "required": ["percentMin", "percentMax"],
+          "not": { "required": ["percent"] }
+        }
+      ],
       "properties": {
         "kind": { "const": "percent" },
-        "percent": { "type": "number", "exclusiveMinimum": 0 },
+        "percent": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Single-value percent of the referenced max. Mutually exclusive with percentMin/percentMax."
+        },
+        "percentMin": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Lower bound of a percent range (e.g. 75 in '75-80%'). Requires schemaVersion >= 3 and must be paired with percentMax."
+        },
+        "percentMax": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Upper bound of a percent range. Requires schemaVersion >= 3 and must be paired with percentMin and strictly greater than percentMin."
+        },
         "referenceId": { "type": "string", "minLength": 1 },
         "reps": { "type": "integer", "minimum": 0 },
         "amrap": { "type": "boolean" },

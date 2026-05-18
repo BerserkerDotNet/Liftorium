@@ -561,7 +561,7 @@ Requirements:
 - Workout history, converted program resources, source materials, notes, and stats are private by default.
 - User must own or have rights to imported program materials.
 - Converted paid programs should not be redistributed without permission.
-- Source files should not be uploaded for AI processing unless the user explicitly consents.
+- Source files must never be uploaded for AI processing through the user-facing app. Developer-time spreadsheet conversion in a Copilot session is the operator's explicit action and does not require an additional in-app prompt.
 - If source files leave the device, the app should disclose that clearly.
 - User can export their data.
 - User can delete account data where accounts are supported.
