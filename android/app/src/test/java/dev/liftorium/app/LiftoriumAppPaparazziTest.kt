@@ -6,7 +6,7 @@ import org.junit.Rule
 import org.junit.Test
 
 /**
- * Paparazzi (LayoutLib-based) snapshot of the Phase 1 scaffold.
+ * Paparazzi (LayoutLib-based) snapshot of the app entry shell.
  *
  * Runs via `:app:recordPaparazziDebug` (generates fresh PNGs). PNGs land
  * under `app/src/test/snapshots/` (gitignored). Visual review by the agent

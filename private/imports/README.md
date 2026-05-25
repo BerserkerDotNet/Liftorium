@@ -1,6 +1,6 @@
 # private/imports/
 
-Canonical output sink for the `import-workflow` skill. The Phase 3 importer
+Canonical output sink for the `import-workflow` skill. The import-workflow importer
 procedure (`.github/skills/import-workflow/SKILL.md`) writes its two
 artifacts here:
 
@@ -36,7 +36,7 @@ Default posture: do NOT commit anything else here.
 
 ## Related
 
-- `.github/skills/import-workflow/SKILL.md` — Phase 3 importer skill.
+- `.github/skills/import-workflow/SKILL.md` — import-workflow importer skill.
 - `.github/skills/import-report-check/SKILL.md` — checker for the
   produced sidecar.
 - `tools/import/README.md` — explains why there is no TypeScript runtime

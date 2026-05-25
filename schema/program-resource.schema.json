@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://liftorium.dev/schemas/program-resource.schema.json",
   "title": "Liftorium program resource",
-  "description": "Versioned, app-ready program resource produced by the spreadsheet import workflow and consumed by the Android ProgramResourceLoader and the read-only Web review surfaces. Phase 2 (program-resources) defines the substantive content (exerciseCatalog, requiredReferences, programStructure with discriminated prescription targets, progressionRules) on top of the Phase 1 contract fields (schemaVersion, metadata, validationStatus, validationIssues, importAudit). Activation also requires the semantic validator in schema/semantics.ts; this schema only checks structural well-formedness.",
+  "description": "Versioned, app-ready program resource produced by the spreadsheet import workflow and consumed by the Android ProgramResourceLoader and the read-only Web review surfaces. program-resources (program-resources) defines the substantive content (exerciseCatalog, requiredReferences, programStructure with discriminated prescription targets, progressionRules) on top of the foundation contract fields (schemaVersion, metadata, validationStatus, validationIssues, importAudit). Activation also requires the semantic validator in schema/semantics.ts; this schema only checks structural well-formedness.",
   "type": "object",
   "required": [
     "schemaVersion",
@@ -20,7 +20,7 @@
     "schemaVersion": {
       "type": "integer",
       "minimum": 1,
-      "description": "Monotonically increasing program-resource schema version. Phase 2 starts at 1. Bump to 2 when the resource uses programWeek.variantOf (week-level runtime alternates). Bump to 3 when the resource uses any of: percentTarget range form (percentMin+percentMax), prescriptionItem.restMaxSecondsHint, or prescriptionItem.warmupSetCount. Loaders that do not understand a higher schemaVersion must reject the resource."
+      "description": "Monotonically increasing program-resource schema version. program-resources starts at 1. Bump to 2 when the resource uses programWeek.variantOf (week-level runtime alternates). Bump to 3 when the resource uses any of: percentTarget range form (percentMin+percentMax), prescriptionItem.restMaxSecondsHint, or prescriptionItem.warmupSetCount. Loaders that do not understand a higher schemaVersion must reject the resource."
     },
     "metadata": { "$ref": "#/$defs/metadata" },
     "validationStatus": { "$ref": "#/$defs/validationStatus" },
@@ -78,7 +78,7 @@
         "contentHash": {
           "type": "string",
           "pattern": "^[A-Fa-f0-9]{64}$",
-          "description": "SHA-256 over the canonical resource content (metadata minus contentHash + exerciseCatalog + requiredReferences + programStructure + progressionRules + programDefaults). Excludes validationStatus, validationIssues, and importAudit so re-validating a resource never changes its content hash. ProgramResourceLoader (Phase 4) uses this to detect the 'same version ID, different content = conflict' case."
+          "description": "SHA-256 over the canonical resource content (metadata minus contentHash + exerciseCatalog + requiredReferences + programStructure + progressionRules + programDefaults). Excludes validationStatus, validationIssues, and importAudit so re-validating a resource never changes its content hash. ProgramResourceLoader (android-program-runner) uses this to detect the 'same version ID, different content = conflict' case."
         }
       }
     },
@@ -149,7 +149,7 @@
     },
     "roundingOverride": {
       "type": "object",
-      "description": "Optional rounding override. Precedence (lowest to highest): programDefaults → block → exercise → prescription target. Phase 2 only validates shape; Phase 4/8 (program runner / training-max progression) enforce precedence at calculation time.",
+      "description": "Optional rounding override. Precedence (lowest to highest): programDefaults → block → exercise → prescription target. program-resources only validates shape; android-program-runner/8 (program runner / training-max progression) enforce precedence at calculation time.",
       "additionalProperties": false,
       "properties": {
         "roundingIncrement": { "type": "number", "exclusiveMinimum": 0 },
@@ -512,7 +512,7 @@
         },
         "parameters": {
           "type": "object",
-          "description": "Open object. Phase 2 keeps this extensible because progression-rule introspection lives in the Android program runner (Phase 4/6).",
+          "description": "Open object. program-resources keeps this extensible because progression-rule introspection lives in the Android program runner (android-program-runner/6).",
           "additionalProperties": true
         }
       }

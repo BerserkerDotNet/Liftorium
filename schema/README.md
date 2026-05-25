@@ -6,7 +6,7 @@ Android `ProgramResourceLoader` and the read-only Web review surfaces.
 
 ## Layout
 
-- `program-resource.schema.json` — canonical JSON Schema. Phase 2 ships
+- `program-resource.schema.json` — canonical JSON Schema. The `program-resources` workstream ships
   `schemaVersion = 1` with the full substantive contract; later schema
   changes bump `schemaVersion` and never mutate a published version.
 - `hash.ts` — canonical content hashing
@@ -47,7 +47,7 @@ npm run refresh-fixture-hashes       # rewrite contentHash in every fixture and 
 A resource is activatable iff:
 
 1. **Ajv-strict** validation succeeds against
-   `program-resource.schema.json`. Phase 2 enforces `additionalProperties:
+   `program-resource.schema.json`. program-resources enforces `additionalProperties:
    false` on every closed object (`progressionRules[].parameters` is the
    only open object — runtime introspection of progression rules is owned
    by the Android program runner, not the validator).
@@ -106,7 +106,7 @@ validator enforces that alignment with `construct.severity_understated`,
 
 ## Content hash refresh workflow
 
-`metadata.contentHash` is the loader-side identity check (Phase 4) that
+`metadata.contentHash` is the loader-side identity check (android-program-runner) that
 detects the "same `programVersionId`, different content = conflict" case.
 For fixtures and examples it is computed via
 `computeProgramResourceContentHash` and committed alongside the resource.
@@ -117,19 +117,19 @@ script only touches the hash field, so the diff stays minimal.
 stale hash to exercise `metadata.content_hash_mismatch`; the refresh
 script skips it because it is not listed in `HASHED_FIXTURE_FILES`.
 
-## Phase 2 scope
+## program-resources scope
 
-Phase 2 (`program-resources`) tightened the schema in place rather than
+program-resources (`program-resources`) tightened the schema in place rather than
 bumping to `schemaVersion = 2` because no production resource shipped
-under the Phase 1 skeleton. Future schema changes that break consumers
+under the foundation skeleton. Future schema changes that break consumers
 must bump `schemaVersion`; minor additive changes that stay backward
 compatible may stay on the current version.
 
-Out of scope for Phase 2 and tracked elsewhere:
+Out of scope for program-resources and tracked elsewhere:
 
-- Import workflow that produces resources — Phase 3 (`docs/workstreams/import.md`).
-- Android `ProgramResourceLoader` runtime — Phase 4.
-- `progressionRules[].parameters` runtime semantics — Phase 4/6.
+- Import workflow that produces resources — import-workflow (`docs/workstreams/import.md`).
+- Android `ProgramResourceLoader` runtime — android-program-runner.
+- `progressionRules[].parameters` runtime semantics — android-program-runner/6.
 - Generated Kotlin/TypeScript model types — the loader and Web
   workstreams own their own consumer types.
 

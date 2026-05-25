@@ -27,7 +27,7 @@ android {
     }
 
     // Room schema export. Path locked in docs/decisions.md
-    // (2026-05-16: Phase 1 Room schema export path).
+    // (2026-05-16: foundation Room schema export path).
     ksp {
         arg("room.schemaLocation", "$projectDir/schemas")
         arg("room.incremental", "true")
@@ -35,6 +35,17 @@ android {
 
     sourceSets {
         getByName("androidTest").assets.srcDirs("$projectDir/schemas")
+        // Robolectric host-side MigrationTest reads schemas from assets via
+        // MigrationTestHelper; mirror the export path into the unit-test
+        // source set so :data:testDebugUnitTest can verify the v1→v2
+        // migration without requiring an emulator/device.
+        getByName("test").assets.srcDirs("$projectDir/schemas")
+    }
+
+    testOptions {
+        // Robolectric host-side integration tests for ProgramResourceLoader
+        // and the Room database baseline (android-program-runner workstream).
+        unitTests.isIncludeAndroidResources = true
     }
 }
 
@@ -49,6 +60,11 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.kotlin.test.junit)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.androidx.room.testing)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.ext.junit.ktx)
+    testImplementation(libs.androidx.test.core.ktx)
+    testImplementation(libs.archunit.junit4)
 
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.runner)

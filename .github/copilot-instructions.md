@@ -50,6 +50,9 @@ Use natural task requests that match skill descriptions, such as validating chan
 - Model invalid states explicitly with typed results/errors; do not use nullable values, broad catches, or silent fallbacks as control flow.
 - Inject clocks, ID generators, dispatchers, and external boundaries so tests can prove behavior.
 - Treat raw workout logs and imported resources as source-of-truth data; derived stats and caches must be rebuildable.
+- Organize by feature, not by layer: `ui/program/` not `ui/screens/`; `domain/run/` not `domain/usecases/`. One public top-level declaration per file when feasible; private helpers stay co-located only when used by that one declaration.
+- No catch-all utility files (`Utils.kt`, `Helpers.kt`, `Common.kt`, `Misc.kt`). Promote a shared helper to its own named file/module the moment a second caller needs it.
+- File size discipline: soft ceiling ~400 lines or 3 public top-level declarations triggers a "is this still one cohesive concern?" review prompt — splitting may be deferred with a recorded reason. Hard ceiling ~800 lines or 6 public top-level declarations is Detekt-enforced; suppress only with a one-line justification comment.
 
 ## Android conventions
 

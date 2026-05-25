@@ -217,7 +217,7 @@ cd android
 
 **Vacuous-pass guard.** `web/scripts/coverage-guard.mjs` runs before `vitest --coverage`:
 
-- If neither `src/data/` nor `src/domain/` exists → exit 0 with "no coverage targets yet" message. (Phase 3 baseline.)
+- If neither `src/data/` nor `src/domain/` exists → exit 0 with "no coverage targets yet" message. (import-workflow baseline.)
 - If either exists but contains zero source files → **exit 1** (gate has been silently neutered).
 - Otherwise → exec `vitest --coverage`.
 

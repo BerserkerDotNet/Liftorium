@@ -25,16 +25,19 @@ class LiftoriumAppRenderTest {
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
     @Test
-    fun liftoriumApp_displaysPlaceholderTitleAndBody() {
+    fun liftoriumApp_displaysSampleProgramLibrary() {
         composeTestRule.setContent {
             LiftoriumApp()
         }
 
         composeTestRule
-            .onNodeWithText("Liftorium")
+            .onNodeWithText("Programs")
             .assertIsDisplayed()
         composeTestRule
-            .onNodeWithText("Phase 1 scaffold. Workout logging arrives in a later phase.")
+            .onNodeWithText("5/3/1 BBB")
+            .assertIsDisplayed()
+        composeTestRule
+            .onNodeWithText("StrongLifts 5x5")
             .assertIsDisplayed()
     }
 }

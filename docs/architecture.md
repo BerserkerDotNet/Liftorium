@@ -229,13 +229,13 @@ Idempotency/conflict rules:
 
 Responsibilities:
 
-- Start program run from a pinned program version.
-- Enforce one active program run.
-- Generate planned session occurrences.
-- Reschedule missed sessions.
-- Repeat workouts/weeks.
-- Pause, abandon, complete, restart, and repeat program runs.
-- Preserve planned schedule separately from actual completion history.
+- Start program run from a pinned program version. *(android-program-runner: shipped — `StartProgramRun`.)*
+- Enforce one active program run. *(android-program-runner: shipped — DB unique index on `program_run.activeRunSlot`; see `docs/decisions.md` 2026-05-17 "One active program run enforced by DB unique index on activeRunSlot".)*
+- Generate planned session occurrences. *(android-program-runner: shipped — `seedScheduleOccurrences` writes the variant-aware occurrence rows in the same Room transaction as the run row.)*
+- Reschedule missed sessions. *(android-program-runner follow-on slice; not implemented in Phase 4.)*
+- Repeat workouts/weeks. *(android-program-runner: `RepeatProgramRun` shipped; week-level repeat-without-progression is workout-logging scope.)*
+- Pause, abandon, complete, restart, and repeat program runs. *(android-program-runner: `AbandonProgramRun` and `RepeatProgramRun` shipped; `CompleteProgramRun`, `PauseProgramRun`, and `RestartProgramRun` are MVP requirements deferred to a follow-on `android-program-runner` slice — the `ProgramRunStatus` enum currently models only `Active | Completed | Abandoned`. Pause requires adding a `Paused` enum value plus a Room migration when introduced.)*
+- Preserve planned schedule separately from actual completion history. *(android-program-runner: shipped — `ScheduleOccurrenceEntity` is distinct from any future `WorkoutSession` row.)*
 
 #### WorkoutLoggingService
 
@@ -308,8 +308,8 @@ erDiagram
     PrescriptionItem ||--o{ SetPrescription : contains
 
     ProgramVersion ||--o{ ProgramRun : pinned_by
-    ProgramRun ||--o{ PlannedSessionOccurrence : schedules
-    PlannedSessionOccurrence ||--o{ WorkoutSession : attempted_as
+    ProgramRun ||--o{ ScheduleOccurrence : schedules
+    ScheduleOccurrence ||--o{ WorkoutSession : attempted_as
     WorkoutSession ||--o{ WorkoutExerciseLog : records
     WorkoutExerciseLog ||--o{ ActualSet : contains
 
@@ -449,6 +449,23 @@ Every sync-relevant entity listed in the MVP implementation contracts must suppo
 
 This metadata is required even though cloud sync is not implemented in MVP.
 
+#### Sync-readiness rollout status
+
+The sync-metadata field set rolls out per entity by the workstream that introduces the entity. Adding the missing fields later requires a Room migration owned by the same workstream. Phase 4 (`android-program-runner`) deliberately introduced only `updatedAtEpochMillis` on `program_run` and `schedule_occurrence` to unblock the v1→v2 migration test without inventing field semantics that the future sync design will own. Each workstream that adds or modifies a sync-relevant entity MUST add an entry to this table and update it as fields land:
+
+| Entity (Room) | Workstream | Stable client ID | createdAt | updatedAt | deletedAt | deviceId | localRevision | clientMutationId |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `loaded_program_version` | `android-program-runner` | ✓ (`programVersionId`) | `loadedAtEpochMillis` | — | — | — | — | — |
+| `program_run` | `android-program-runner` | ✓ (`programRunId`) | `startedAtEpochMillis` | ✓ (v2) | — | — | — | — |
+| `schedule_occurrence` | `android-program-runner` | ✓ (`occurrenceId`) | — (carried by parent `program_run.startedAtEpochMillis`) | ✓ (v2) | — | — | — | — |
+| `program_run_reference_value` | `android-program-runner` | ✓ (composite `programRunId + referenceId`) | `suppliedAtEpochMillis` | — | — | — | — | — |
+| `workout_session` / `workout_exercise_log` / `actual_set` / `prescription_calculation_snapshot` / `local_mutation` | `android-workout-logging` | planned | planned | planned | planned | planned | planned | planned |
+| `training_max_entry` | `android-training-max-progression` | planned | planned | planned | planned | planned | planned | planned |
+| `substitution_event` | `android-catalog-substitutions` | planned | planned | planned | planned | planned | planned | planned |
+| `stats_cache` | `android-stats-history` | planned | planned | planned | n/a (cache; see Stats architecture) | planned | planned | n/a (derived) |
+
+Gaps marked `—` are accepted MVP gaps that the listed owning workstream must close before its acceptance. New entities introduced outside this table without a sync-metadata plan MUST be rejected in review.
+
 ## Program resource architecture
 
 Versioned JSON is the contract between import and app runtime.
@@ -486,13 +503,13 @@ Some programs include weeks where the user chooses ONE of multiple templates and
 - `variantOf` — id of another `programWeek` in the SAME block. The week declaring `variantOf` is an alternate of the base week.
 - `variantLabel` — operator-facing label distinguishing this variant within its group (e.g. "A", "B"). Required on every member of a multi-member group; labels must be unique within the group.
 
-Semantic rules: variant groups must be contiguous in the block's `weeks[]` array; chain depth is bounded to 1 (no variant of a variant); reference validation uses the BASE week's `weekIndex` when a required reference is consumed only inside a variant. Resources that use `variantOf` MUST declare `schemaVersion >= 2`. Variant-unaware loaders MUST reject `schemaVersion >= 2` rather than silently running every week of a variant group sequentially. Phase 4 `ProgramResourceLoader` owns the runtime presentation of the variant choice and the recording of which variant the user picked, so progression and stats only count the executed variant. See `docs/decisions.md` 2026-05-17 *programWeek runtime variants*.
+Semantic rules: variant groups must be contiguous in the block's `weeks[]` array; chain depth is bounded to 1 (no variant of a variant); reference validation uses the BASE week's `weekIndex` when a required reference is consumed only inside a variant. Resources that use `variantOf` MUST declare `schemaVersion >= 2`. Variant-unaware loaders MUST reject `schemaVersion >= 2` rather than silently running every week of a variant group sequentially. android-program-runner `ProgramResourceLoader` owns the runtime presentation of the variant choice and the recording of which variant the user picked, so progression and stats only count the executed variant. See `docs/decisions.md` 2026-05-17 *programWeek runtime variants*.
 
 ### Duplicate and partial import handling
 
 - Resource load occurs in one transaction.
 - If any program structure, catalog, validation issue, or audit record fails to persist, the whole load rolls back.
-- Duplicate resource loads follow the idempotency/conflict rules in `ProgramResourceLoader`.
+- Duplicate resource loads follow the idempotency/conflict rules in `ProgramResourceLoader`. The `(programVersionId, contentHash)` invariant is also enforced at the DB layer by a `UNIQUE INDEX` on `loaded_program_version.contentHash` from `LiftoriumDatabase` v2 onward (see `docs/decisions.md` 2026-05-17 "LiftoriumDatabase v1→v2 audit columns and composite occurrence index"). Concurrent racy loads that bypass the in-code check still fail with a typed constraint error, never with silent data corruption.
 - Validation reports are retained for rejected resources, but rejected resources cannot be activated.
 
 ### Resource migration
@@ -622,9 +639,11 @@ stateDiagram-v2
     Abandoned --> Active: restart or start new run
 ```
 
+This diagram describes the MVP target. Current Phase 4 implementation covers the `Active`, `Completed`, and `Abandoned` states only; `NotStarted` is implicit (no `ProgramRunEntity` row exists yet) and `Paused` is deferred to a follow-on `android-program-runner` slice (see `ProgramRunService` responsibilities above). Adding `Paused` requires a `Paused` value on `ProgramRunStatus`, a Room migration, and a typed `PauseProgramRun` use case.
+
 Planned schedule and actual history are separate:
 
-- `PlannedSessionOccurrence`: intended order/date/status.
+- `ScheduleOccurrence`: intended order/date/status (the `android-program-runner` implementation name; the v1 architecture draft used `PlannedSessionOccurrence` as a synonym).
 - `WorkoutSession`: actual attempt, start time, completion time, and outcome.
 - Repeating a workout creates a separate actual attempt.
 - Repeating a program creates a new program run.
@@ -897,7 +916,8 @@ Sync-relevant entities:
 - `SetPrescription`
 - `PrescriptionTarget`
 - `ProgramRun`
-- `PlannedSessionOccurrence`
+- `ScheduleOccurrence` (planned session occurrence; implementation entity is `ScheduleOccurrenceEntity`)
+- `ProgramRunReferenceValue` (run-scoped runtime injection of training-max / 1RM references)
 - `WorkoutSession`
 - `WorkoutExerciseLog`
 - `ActualSet`
@@ -957,6 +977,8 @@ From the first schema:
 - Provide migration tests.
 - Preserve raw workout logs, program version links, calculation snapshots, substitutions, training max history, tombstones, and sync-ready metadata.
 - Derived stats may be rebuilt or invalidated during migration, but raw logs must not be lost.
+
+Current status: `LiftoriumDatabase` is at version 2. Both `1.json` and `2.json` are committed under `android/data/schemas/dev.liftorium.data.LiftoriumDatabase/`. `Migration1To2` is additive (audit columns + composite occurrence index + `contentHash` unique index) and covered by `MigrationTest`. Future migrations append a `MigrationN_to_M` to `LIFTORIUM_DATABASE_MIGRATIONS` and ship an `N.json` snapshot; destructive `fallbackToDestructiveMigration` is not permitted.
 
 ### Durability contract
 
@@ -1041,6 +1063,12 @@ Architecture is only accepted when tests prove the contracts:
 - Android runtime/E2E tests for offline workout, process death recovery, timer permission, substitutions, repeats, and rescheduling.
 - Web tests for read-only scope.
 - Import validation tests for synthetic and approved private spreadsheet-derived fixtures.
+- Architecture fitness functions enforce module boundaries in CI (see `docs/decisions.md` 2026-05-24):
+  - `verifyModuleGraph` (Gradle): asserts only ADR-approved inter-module `ProjectDependency` edges exist across all Android variant configurations.
+  - ArchUnit on `:domain` and `:data`: domain external-dependency allowlist, no Android dispatchers in domain, domain slice-cycle freedom, repository-interface invariant, `domain.common` dependency-leaf rule; `:data` UI/lifecycle ban, no `:app` dep, Room `@Entity`/`@Dao` locality, data slice-cycle freedom.
+  - `verifyAppUiBoundary` (Gradle source scan): asserts `app/src/<any-production-sourceSet>/.../dev/liftorium/app/ui/**` does not reference `dev.liftorium.data..`. Replaces ArchUnit on `:app` (AGP's ASM transform is incompatible with `archunit-junit4`).
+  - `verifyRoomLocality` (Gradle source scan): asserts `androidx.room` annotations only appear in `:data`.
+  - All four tasks are wired into every module's `check` lifecycle and use `.because(...)` clauses citing this document and `docs/decisions.md`.
 
 Traceability from acceptance scenario to contract and planned test ID is maintained in `docs/product.md`.
 

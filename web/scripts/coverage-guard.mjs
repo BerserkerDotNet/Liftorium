@@ -10,8 +10,8 @@
  *
  * Behavior:
  *   1. If NEITHER `src/data/` nor `src/domain/` exists → exit 0 with a
- *      message ("no coverage targets yet — Phase 4+ work pending").
- *      This is the Phase 3 baseline: Web has no domain/data code yet.
+ *      message ("no coverage targets yet — android-program-runner+ work pending").
+ *      This is the import-workflow baseline: Web has no domain/data code yet.
  *   2. If EITHER directory exists but contains zero source files
  *      (.ts/.tsx, excluding *.test.* / *.spec.* / *.d.ts) → exit 1.
  *      That signals the gate has been silently neutered.
@@ -52,8 +52,8 @@ if (present.length === 0) {
   console.log(
     '[web/coverage-guard] No coverage targets yet - neither src/data/ nor src/domain/ exists.',
   );
-  console.log('[web/coverage-guard] This is expected for the Phase 3 Web baseline.');
-  console.log('[web/coverage-guard] Gate will activate when Phase 4+ adds domain/data modules.');
+  console.log('[web/coverage-guard] This is expected for the import-workflow Web baseline.');
+  console.log('[web/coverage-guard] Gate will activate when android-program-runner+ adds domain/data modules.');
   process.exit(0);
 }
 

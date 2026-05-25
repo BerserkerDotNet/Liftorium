@@ -36,21 +36,21 @@
 
 - PDF-assisted import is out of MVP.
 - User-facing import endpoint (file picker → `ProgramResourceLoader` →
-  Room) is owned by the `program-resources` workstream (Phase 4), not
-  by this workstream. The Phase 3 skill only produces JSON files on
+  Room) is owned by the `program-resources` workstream (android-program-runner), not
+  by this workstream. The import-workflow skill only produces JSON files on
   the developer's local filesystem.
 - Original spreadsheets, PDFs, private excerpts, and sensitive
   training data are not committed by default.
 - Critical issues block finalization and activation.
 - Unknown exercises require explicit approval or alias/canonical
   mapping.
-- The Phase 3 → Phase 4 handoff is two artifacts: the
+- The import-workflow → android-program-runner handoff is two artifacts: the
   `ProgramResource` JSON and the `import-report.json` sidecar.
 
 ## Tests and evidence required
 
 - Synthetic spreadsheet walk-through evidence for CLI-IMP-001/002
-  produced once during Phase 3 acceptance (not committed; recorded in
+  produced once during import-workflow acceptance (not committed; recorded in
   the coverage-review report).
 - Approved private spreadsheet-derived JSON only when explicitly
   allowed by the operator.
@@ -66,9 +66,9 @@
 
 Android and Web sessions should never need original spreadsheets. They
 receive finalized JSON resources plus the privacy-safe import-report
-sidecar from the import-workflow skill (Phase 3).
+sidecar from the import-workflow skill (import-workflow).
 
-Phase 4 assumptions for the loader:
+android-program-runner assumptions for the loader:
 
 - Receives `<programVersionId>.json` and `<programVersionId>.import-report.json`.
 - MUST revalidate the JSON independently against
@@ -79,4 +79,4 @@ Phase 4 assumptions for the loader:
   as a conflict; reject the load and surface the conflict to the user.
 - MUST NOT attempt to read or open the original spreadsheet.
 - Loader-side cross-resource conflict gating is authoritative; the
-  Phase 3 skill is advisory only.
+  import-workflow skill is advisory only.

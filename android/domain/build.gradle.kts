@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.kover)
 }
 
@@ -15,8 +16,14 @@ dependencies {
     // also fails loudly if such types become resolvable at runtime.
     api(project(":core"))
     api(libs.kotlinx.coroutines.core)
+    // kotlinx-serialization-json is pure Kotlin/JVM and carries no Android
+    // framework types. It is required for android-program-runner ProgramResource DTOs and the
+    // JsonElement-based content-hash canonicalizer that mirrors
+    // schema/hash.ts. See android-program-runner workstream.
+    api(libs.kotlinx.serialization.json)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlin.test.junit)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.archunit.junit4)
 }

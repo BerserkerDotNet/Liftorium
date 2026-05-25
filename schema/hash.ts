@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
  * Build the canonical content view of a program resource for hashing.
  *
  * The content hash covers program content only, not validation state or
- * import audit metadata. ProgramResourceLoader (Phase 4) uses
+ * import audit metadata. ProgramResourceLoader (android-program-runner) uses
  * `metadata.contentHash` to detect the "same program version id with
  * different content = conflict" case, so the hash must remain stable
  * across re-validation of the same content.

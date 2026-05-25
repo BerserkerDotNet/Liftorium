@@ -23,7 +23,7 @@ All commands are run from the repository root unless noted.
 
 | Area | Command | Status | Required before done |
 | --- | --- | --- | --- |
-| Domain unit tests (incl. architecture guard) | `cd android; .\gradlew.bat :domain:test --console=plain` | passes now, JDK 21 on PATH | Any change to `:domain` or to the framework-independence guarantee |
+| Domain unit tests (incl. architecture guard + ArchUnit fitness rules) | `cd android; .\gradlew.bat :domain:test --console=plain` | passes now, JDK 21 on PATH | Any change to `:domain`, the framework-independence guarantee, or the ArchUnit rules in `dev.liftorium.domain.arch` |
 | Core unit tests | `cd android; .\gradlew.bat :core:test --console=plain` | passes now, JDK 21 on PATH | Any change to `:core` |
 | Domain+data+core coverage gate (Kover, ≥95% LINE/BRANCH/INSTRUCTION) | `cd android; .\gradlew.bat koverVerify --console=plain` | passes now, JDK 21 + SDK 34 on machine | Any change that adds or modifies behavior in `:core`, `:data`, or `:domain`. Counter mapping is platform-native: Kover has no METHOD counter, so vitest "functions" is approximated by INSTRUCTION. See `.github/skills/test-design/SKILL.md` Appendix A and the Exclusion Contract in `docs/decisions.md`. |
 
@@ -36,10 +36,12 @@ These commands need `platforms;android-34` and `build-tools;34.0.0` installed lo
 | App + data JVM unit tests | `cd android; .\gradlew.bat :app:testDebugUnitTest :data:testDebugUnitTest --console=plain` | passes now, JDK 21 + SDK 34 on machine | Any change to `:app` or `:data`. `:app:testDebugUnitTest` runs the trivial JUnit smoke, Robolectric-driven Compose render/semantics tests, and Paparazzi snapshot verification against committed goldens. |
 | Android build smoke | `cd android; .\gradlew.bat :app:assembleDebug --console=plain` | passes now, JDK 21 + SDK 34 on machine | Any change that touches `:app` Gradle config, manifest, or release surface |
 | Android lint | `cd android; .\gradlew.bat :app:lintDebug --console=plain` | passes now, JDK 21 + SDK 34 on machine | Any change to `:app` Compose UI or manifest |
+| Compose stability lint (Detekt + compose-rules) | `cd android; .\gradlew.bat :app:detekt --console=plain` | passes now, JDK 21 + SDK 34 on machine | Any change to `:app` Compose UI, `@Immutable` data classes, or Composable parameter signatures. Narrow ruleset: only `Compose.MutableParams`, `Compose.UnstableCollections`, `Compose.ComposableParamOrder`, `Compose.MutableStateParam` (config: `android/config/detekt/detekt-compose.yml`). See `docs/decisions.md` 2026-05-25. |
 | Compose visual snapshots (Paparazzi) | `cd android; .\gradlew.bat :app:recordPaparazziDebug --console=plain` | passes now, JDK 21 + SDK 34 on machine | Any change that adds or modifies a Compose surface or its screen state. Regenerates PNGs under `android/app/src/test/snapshots/images/` (gitignored). The agent MUST then call `view` on each generated PNG and list the paths in evidence. See the visual-review policy in `docs/decisions.md`. |
-| Room migration tests | `cd android; .\gradlew.bat :data:testDebugUnitTest --tests "*Migration*" --console=plain` | gated: first Room `@Database` does not exist yet (Phase 4) | Any Room schema bump |
+| Room migration tests | `cd android; .\gradlew.bat :data:testDebugUnitTest --tests "*Migration*" --console=plain` | passes now, JDK 21 + SDK 34 on machine — Room v1 baseline landed in android-program-runner. Migration harness gates v2+ schema bumps. | Any Room schema bump |
 | Android instrumentation/Compose | `cd android; .\gradlew.bat :app:connectedDebugAndroidTest --console=plain` | gated: requires an attached API 30+ device or emulator | Runtime-critical UI (rest timer foreground service, locked-phone notification, process death). NOT substituted by Robolectric/Paparazzi host-side renders. |
-| All Android tests (umbrella) | `cd android; .\gradlew.bat check --console=plain` | passes now, JDK 21 + SDK 34 on machine | Major Android features |
+| All Android tests (umbrella) | `cd android; .\gradlew.bat check --console=plain` | gated: `:app:testReleaseUnitTest` fails because the Robolectric Compose render tests use `createAndroidComposeRule<ComponentActivity>()` and `ComponentActivity` is not declared in the release-variant merged manifest. Tracked as a known pre-existing baseline issue (predates android-program-runner). The registered debug-variant verification commands cover the same surface. | Major Android features |
+| Architecture fitness functions (all 3) | `cd android; .\gradlew.bat verifyModuleGraph verifyAppUiBoundary verifyRoomLocality --console=plain` | passes now, JDK 21 on PATH | Any change to module graph, `app/src/**/ui/**`, or anywhere `androidx.room` annotations could leak. Also wired into every module's `check`. See `docs/decisions.md` 2026-05-24. |
 
 ### Web
 
@@ -49,7 +51,7 @@ These commands need `platforms;android-34` and `build-tools;34.0.0` installed lo
 | Web unit/component tests | `cd web; npm test` | passes now | Any change under `web/` |
 | Web production build | `cd web; npm run build` | passes now | Any change that ships to the Web release surface |
 | Web domain+data coverage gate (vitest, ≥95% on all four metrics) | `cd web; npm run test:coverage` | passes now (vacuous pass until `src/data/` or `src/domain/` lands; preflight `scripts/coverage-guard.mjs` fails the gate if either dir exists but contains zero source files) | Any change that adds or modifies behavior in `web/src/data/**` or `web/src/domain/**`. UI is excluded by config. See `.github/skills/test-design/SKILL.md` Appendix B. |
-| Web read-only guard | (registered when the first Web data client lands) | gated: no Web data client yet (Phase 10) | Web data client, persistence, protected-domain, or capability copy change |
+| Web read-only guard | (registered when the first Web data client lands) | gated: no Web data client yet (web-readonly) | Web data client, persistence, protected-domain, or capability copy change |
 
 ### Schema / program resources
 

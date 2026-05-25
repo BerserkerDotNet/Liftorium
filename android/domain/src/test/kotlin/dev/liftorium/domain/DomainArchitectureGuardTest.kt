@@ -60,7 +60,7 @@ class DomainArchitectureGuardTest {
                 buildString {
                     appendLine("Forbidden framework classes were resolvable from the :domain test classpath.")
                     appendLine("This means :domain has picked up an Android, Room, or Compose dependency,")
-                    appendLine("which violates docs/architecture.md and docs/decisions.md (2026-05-16: Phase 1 Android module layout).")
+                    appendLine("which violates docs/architecture.md and docs/decisions.md (2026-05-16: Android module layout).")
                     appendLine("Leaked classes:")
                     leaked.forEach { appendLine("  - $it") }
                 },

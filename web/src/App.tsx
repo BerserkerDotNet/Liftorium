@@ -4,7 +4,7 @@ export interface AppProps {
 }
 
 /**
- * Phase 1 placeholder shell for the Liftorium read-only Web surface.
+ * Placeholder shell for the Liftorium read-only Web surface.
  *
  * The MVP Web app is snapshot-based and read-only (see `docs/architecture.md`
  * "Web data-source boundary"). This component intentionally renders nothing

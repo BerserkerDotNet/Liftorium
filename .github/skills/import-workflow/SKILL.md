@@ -25,7 +25,7 @@ its contents are ignored by default so proprietary program data never
 leaks into git. See `private/imports/README.md` for the commit-exception
 rules for synthetic / non-proprietary fixtures.
 
-Phase 4 (`program-resources`) owns the Android input endpoint that
+The `android-program-runner` workstream owns the Android input endpoint that
 ingests these files into Room via `ProgramResourceLoader`.
 
 ## Inputs
@@ -183,15 +183,22 @@ For each percent-based prescription (`targetKind: "percent"`):
 - The percent target carries a `referenceId`, e.g. `tm-back-squat`.
 - That reference must be declared in `requiredReferences[]`.
 - Required references are emitted as `supplied: false` at import
-  time. The runtime `ProgramResourceLoader` (Phase 4) injects the
-  user's actual training-max / one-rep-max values at activation,
-  flipping each to `supplied: true` with `value` + `unit`.
+  time. The runtime `ProgramResourceLoader` (android-program-runner) collects the
+  user's actual training-max / one-rep-max values at activation, but
+  it does NOT flip `supplied: true` on the loaded version row. The
+  loaded version is immutable; runtime values are stored separately
+  on the program-run row as `ProgramRunReferenceValueEntity`
+  (`programRunId`, `referenceId`, `value`, `unit`, `source`,
+  `suppliedAtUtc`). The effective value at workout-start time comes
+  from a join of the loaded reference + the run-scoped value. See
+  `docs/decisions.md` "Pending-reference runtime values are
+  run-scoped, not version-scoped".
 - First-week missing values: `reference.missing_first_week`,
   severity `critical`, BLOCKS activation at import time. This is
   EXPECTED for user-program imports — see "pending_runtime_references"
   below.
 - Later-week missing values: `reference.missing_later_week`,
-  severity `warning`. Activates, but Phase 4's runner must block the
+  severity `warning`. Activates, but android-program-runner's runner must block the
   affected workout until the value is supplied.
 
 ### Step 4.1 — Do NOT capture pre-calculated weights
@@ -474,7 +481,7 @@ Tell the operator:
 - "<N> warning(s) will surface in the run UI."
 - "If you regenerate, the JSON will be byte-identical for the same
   inputs."
-- "Phase 4's Android input endpoint will revalidate this file
+- "android-program-runner's Android input endpoint will revalidate this file
   independently before accepting it. The sidecar report is operator
   audit evidence, not a substitute for that revalidation."
 
@@ -485,7 +492,7 @@ per the rules in `private/imports/README.md`. The default posture is
 
 ## What this skill does NOT do
 
-- It does not build an Android UI to load the JSON. Phase 4 owns that
+- It does not build an Android UI to load the JSON. android-program-runner owns that
   (`program-resources` workstream).
 - It does not maintain a TypeScript runtime importer. There is none.
 - It does not auto-approve exercises, auto-classify constructs, or

@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 /**
- * validate-resource — Phase 3 CLI helper for the import-workflow skill.
+ * validate-resource — import-workflow CLI helper for the import-workflow skill.
  *
  * Reads a ProgramResource JSON file and runs the canonical validation
  * stack against it:
@@ -387,7 +387,7 @@ function main(): never {
 
   // Independent hash check (semantics already does this, but we double-check
   // here to be the structural "did the import skill compute the hash"
-  // self-check called for in the Phase 3 plan).
+  // self-check called for in the import-workflow plan).
   const r = r0;
   const declared =
     r && typeof r === 'object' && r.metadata && typeof r.metadata === 'object'

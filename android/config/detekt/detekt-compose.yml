@@ -1,0 +1,195 @@
+# Detekt configuration — narrow structural discipline ONLY.
+#
+# This file deliberately keeps Detekt minimal. We are not adopting it as a
+# general code-style linter. It enforces exactly two concerns, both documented
+# in `docs/decisions.md`:
+#
+#   1. Compose `@Immutable` stability promise (ADR 2026-05-25).
+#      UI state types must be construction-time-immutable so the Compose
+#      compiler's stability inference can skip recomposition of value-equal
+#      subtrees.
+#
+#   2. File-organization hard ceiling (ADR 2026-05-25 follow-up).
+#      Enforces only the HARD ceiling defined in copilot-instructions.md
+#      "Development conventions" — ~800 lines, ~6 public top-level
+#      declarations. The SOFT ceiling (~400 / 3) lives in the instructions
+#      file and is a review prompt, not a CI failure.
+#
+# Compose stability rules come from `io.nlopez.compose.rules:detekt` loaded
+# via `detektPlugins` in `app/build.gradle.kts`. The structural rules come
+# from Detekt's built-in `complexity` and `naming` rulesets — every other
+# rule in those rulesets stays off.
+
+build:
+  maxIssues: 0
+  weights:
+    complexity: 0
+    LongParameterList: 0
+    style: 0
+    comments: 0
+
+# `complexity` ruleset: only the hard file-size ceiling is active. We intentionally
+# DO NOT enable LongMethod (Compose builder DSL legitimately has long bodies),
+# TooManyFunctions (private helpers are encouraged), or any other complexity rule.
+complexity:
+  active: true
+  LargeClass:
+    active: true
+    # Hard ceiling. Soft ceiling (~400 lines / 3 public declarations) is a review
+    # prompt in copilot-instructions.md, not a CI failure.
+    threshold: 800
+  LongMethod:
+    active: false
+  LongParameterList:
+    active: false
+  TooManyFunctions:
+    active: false
+  CyclomaticComplexMethod:
+    active: false
+  ComplexCondition:
+    active: false
+  ComplexInterface:
+    active: false
+  MethodOverloading:
+    active: false
+  NestedBlockDepth:
+    active: false
+  StringLiteralDuplication:
+    active: false
+  NamedArguments:
+    active: false
+  ReplaceSafeCallChainWithRun:
+    active: false
+  LabeledExpression:
+    active: false
+  CognitiveComplexMethod:
+    active: false
+
+# `naming` ruleset: only MatchingDeclarationName is active — the single-public-
+# declaration discipline that pairs with the file-size soft ceiling. A file
+# with one top-level public declaration MUST be named for it; a multi-decl
+# file must use a generic name, which makes "still one concern?" easier to
+# spot at review time.
+naming:
+  active: true
+  MatchingDeclarationName:
+    active: true
+  ClassNaming:
+    active: false
+  ConstructorParameterNaming:
+    active: false
+  EnumNaming:
+    active: false
+  FunctionMaxLength:
+    active: false
+  FunctionMinLength:
+    active: false
+  FunctionNaming:
+    active: false
+  FunctionParameterNaming:
+    active: false
+  InvalidPackageDeclaration:
+    active: false
+  LambdaParameterNaming:
+    active: false
+  MemberNameEqualsClassName:
+    active: false
+  NoNameShadowing:
+    active: false
+  NonBooleanPropertyPrefixedWithIs:
+    active: false
+  ObjectPropertyNaming:
+    active: false
+  PackageNaming:
+    active: false
+  TopLevelPropertyNaming:
+    active: false
+  VariableMaxLength:
+    active: false
+  VariableMinLength:
+    active: false
+  VariableNaming:
+    active: false
+  BooleanPropertyNaming:
+    active: false
+  ForbiddenClassName:
+    active: false
+
+# Suppress every other default ruleset — we explicitly opt in only above.
+comments:
+  active: false
+coroutines:
+  active: false
+empty-blocks:
+  active: false
+exceptions:
+  active: false
+performance:
+  active: false
+potential-bugs:
+  active: false
+style:
+  active: false
+
+# Compose stability ruleset (mrmans0n/compose-rules) — only the rules that
+# defend the `@Immutable` promise are enabled. Other Compose-style rules
+# (naming, lambda parameter style, etc.) stay off because we are not
+# adopting Compose-style enforcement broadly yet.
+Compose:
+  active: true
+  MutableParams:
+    active: true
+  UnstableCollections:
+    active: true
+  ComposableParamOrder:
+    active: true
+  MutableStateParam:
+    active: true
+  ContentEmitterReturningValues:
+    active: false
+  ContentSlotReused:
+    active: false
+  ContentTrailingLambda:
+    active: false
+  DefaultsVisibility:
+    active: false
+  ModifierClickableOrder:
+    active: false
+  ModifierComposable:
+    active: false
+  ModifierComposed:
+    active: false
+  ModifierMissing:
+    active: false
+  ModifierNaming:
+    active: false
+  ModifierNotUsedAtRoot:
+    active: false
+  ModifierReused:
+    active: false
+  ModifierWithoutDefault:
+    active: false
+  MultipleEmitters:
+    active: false
+  Naming:
+    active: false
+  ParameterNaming:
+    active: false
+  PreviewAnnotationNaming:
+    active: false
+  PreviewNaming:
+    active: false
+  PreviewPublic:
+    active: false
+  RememberContentMissing:
+    active: false
+  RememberMissing:
+    active: false
+  TopLevelComposables:
+    active: false
+  UnnecessaryEventHandlerParameter:
+    active: false
+  ViewModelForwarding:
+    active: false
+  ViewModelInjection:
+    active: false

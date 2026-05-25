@@ -21,18 +21,27 @@
 - Resource models/types or generated type pipeline.
 - Valid, warning, and blocked fixtures.
 - Resource validation command registered in the verification-loop skill.
-- **Android input endpoint (Phase 4 deliverable):** a Compose UI flow
+- **Android input endpoint (android-program-runner deliverable):** a Compose UI flow
   that lets the user pick a `<programVersionId>.json` file produced by
-  the Phase 3 import-workflow skill, runs `ProgramResourceLoader`
-  against it (schema + semantics + content-hash + cross-resource
-  conflict check), and writes the program into Room in a single
-  transaction. This replaces the "user-facing import is out of MVP"
-  restriction with a constrained file-picker import that consumes
-  pre-validated JSON, not spreadsheets.
-- **`ProgramResourceLoader` (Phase 4 deliverable):** the Android-side
+  the import-workflow import-workflow skill, runs `ProgramResourceLoader`
+  against it (schema-version gate + canonical contentHash recompute +
+  `validationStatus ∈ {activatable, pending_runtime_references}` +
+  pending-references gate + same-id-different-hash conflict check),
+  and writes the program into Room in a single transaction. The
+  loader does NOT re-run the full semantic validator on-device; see
+  `docs/decisions.md` "Android runtime validation strategy =
+  recheck_only" for rationale. This replaces the "user-facing import
+  is out of MVP" restriction with a constrained file-picker import
+  that consumes pre-validated JSON, not spreadsheets.
+- **`ProgramResourceLoader` (android-program-runner deliverable):** the Android-side
   loader that enforces immutable program-version identity (same
   `programVersionId` + different `contentHash` = conflict) and rolls
-  back partial loads on any persistence failure.
+  back partial loads on any persistence failure. Validation is
+  `recheck_only`: schema-version range, canonical contentHash, status
+  whitelist, and pending-references first-week TM gate. The import-workflow
+  TS validator (`schema/scripts/validate-resource.ts` +
+  `schema/semantics.ts`) remains the single source of truth for
+  semantic activation rules.
 
 ## Contracts not to break
 
@@ -42,8 +51,9 @@
 - Same program version ID with a different content hash is a conflict.
 - Activated program versions are immutable.
 - `validationStatus` is a four-state enum: `activatable`, `pending_runtime_references`, `blocked`, `rejected`. Adding values requires schemaVersion bump + ADR + loader update.
-- `pending_runtime_references` is set only when the artifact's structural blockers reduce to first-week `reference.missing_first_week` criticals for `training_max` / `one_rep_max` references with `supplied: false`. The loader (not the importer) supplies these at activation and re-validates.
+- `pending_runtime_references` is set only when the artifact's structural blockers reduce to first-week `reference.missing_first_week` criticals for `training_max` / `one_rep_max` references with `supplied: false`. The loader (not the importer) collects these at activation; injected values are stored on the program-run row (run-scoped), never on the loaded version row. The loader never rewrites `validationStatus` or `validationIssues` on persisted version rows.
 - `contentHash` canonicalization excludes `validationStatus`, `validationIssues`, and `importAudit`, so flipping status (or runtime ref injection) does not invalidate the hash.
+- Runtime validation on Android is `recheck_only`: schema-version range + canonical contentHash recompute + status whitelist + pending-references first-week TM gate. The Kotlin loader does NOT port `schema/semantics.ts`; the import-workflow TS validator stays the single source of truth for semantic activation rules.
 
 ## Schema-version compatibility table
 

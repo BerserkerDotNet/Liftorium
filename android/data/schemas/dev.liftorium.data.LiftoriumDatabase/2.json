@@ -1,0 +1,1237 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 2,
+    "identityHash": "0ee7541b4fd958ab6c231c5118428f49",
+    "entities": [
+      {
+        "tableName": "loaded_program_version",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`programVersionId` TEXT NOT NULL, `programId` TEXT NOT NULL, `versionLabel` TEXT NOT NULL, `displayName` TEXT, `authorAttribution` TEXT, `contentHash` TEXT NOT NULL, `schemaVersion` INTEGER NOT NULL, `validationStatus` TEXT NOT NULL, `loadedAtEpochMillis` INTEGER NOT NULL, `programDefaultsJson` TEXT, `programStructureRoundingOverrideJson` TEXT, `importAuditJson` TEXT NOT NULL, `validationIssuesJson` TEXT NOT NULL, PRIMARY KEY(`programVersionId`))",
+        "fields": [
+          {
+            "fieldPath": "programVersionId",
+            "columnName": "programVersionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "programId",
+            "columnName": "programId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "versionLabel",
+            "columnName": "versionLabel",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "displayName",
+            "columnName": "displayName",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "authorAttribution",
+            "columnName": "authorAttribution",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "contentHash",
+            "columnName": "contentHash",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "schemaVersion",
+            "columnName": "schemaVersion",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "validationStatus",
+            "columnName": "validationStatus",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "loadedAtEpochMillis",
+            "columnName": "loadedAtEpochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "programDefaultsJson",
+            "columnName": "programDefaultsJson",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "programStructureRoundingOverrideJson",
+            "columnName": "programStructureRoundingOverrideJson",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "importAuditJson",
+            "columnName": "importAuditJson",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "validationIssuesJson",
+            "columnName": "validationIssuesJson",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "programVersionId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_loaded_program_version_contentHash",
+            "unique": true,
+            "columnNames": [
+              "contentHash"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_loaded_program_version_contentHash` ON `${TABLE_NAME}` (`contentHash`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "loaded_exercise_catalog_entry",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`programVersionId` TEXT NOT NULL, `exerciseId` TEXT NOT NULL, `displayName` TEXT NOT NULL, `family` TEXT NOT NULL, `equipment` TEXT NOT NULL, `defaultRoundingIncrement` REAL, `defaultRoundingUnit` TEXT, `aliasesJson` TEXT NOT NULL, PRIMARY KEY(`programVersionId`, `exerciseId`), FOREIGN KEY(`programVersionId`) REFERENCES `loaded_program_version`(`programVersionId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "programVersionId",
+            "columnName": "programVersionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "exerciseId",
+            "columnName": "exerciseId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "displayName",
+            "columnName": "displayName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "family",
+            "columnName": "family",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "equipment",
+            "columnName": "equipment",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "defaultRoundingIncrement",
+            "columnName": "defaultRoundingIncrement",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "defaultRoundingUnit",
+            "columnName": "defaultRoundingUnit",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "aliasesJson",
+            "columnName": "aliasesJson",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "programVersionId",
+            "exerciseId"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": [
+          {
+            "table": "loaded_program_version",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "programVersionId"
+            ],
+            "referencedColumns": [
+              "programVersionId"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "loaded_required_reference",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`programVersionId` TEXT NOT NULL, `referenceId` TEXT NOT NULL, `referenceType` TEXT NOT NULL, `exerciseId` TEXT, `firstRunnableWeekIndex` INTEGER, `supplied` INTEGER NOT NULL, `value` REAL, `unit` TEXT, PRIMARY KEY(`programVersionId`, `referenceId`), FOREIGN KEY(`programVersionId`) REFERENCES `loaded_program_version`(`programVersionId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "programVersionId",
+            "columnName": "programVersionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "referenceId",
+            "columnName": "referenceId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "referenceType",
+            "columnName": "referenceType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "exerciseId",
+            "columnName": "exerciseId",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "firstRunnableWeekIndex",
+            "columnName": "firstRunnableWeekIndex",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "supplied",
+            "columnName": "supplied",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "value",
+            "columnName": "value",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "unit",
+            "columnName": "unit",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "programVersionId",
+            "referenceId"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": [
+          {
+            "table": "loaded_program_version",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "programVersionId"
+            ],
+            "referencedColumns": [
+              "programVersionId"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "loaded_progression_rule",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`programVersionId` TEXT NOT NULL, `ruleId` TEXT NOT NULL, `kind` TEXT NOT NULL, `appliesToExerciseIdsJson` TEXT NOT NULL, `parametersJson` TEXT, PRIMARY KEY(`programVersionId`, `ruleId`), FOREIGN KEY(`programVersionId`) REFERENCES `loaded_program_version`(`programVersionId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "programVersionId",
+            "columnName": "programVersionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ruleId",
+            "columnName": "ruleId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kind",
+            "columnName": "kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "appliesToExerciseIdsJson",
+            "columnName": "appliesToExerciseIdsJson",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "parametersJson",
+            "columnName": "parametersJson",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "programVersionId",
+            "ruleId"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": [
+          {
+            "table": "loaded_program_version",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "programVersionId"
+            ],
+            "referencedColumns": [
+              "programVersionId"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "loaded_program_block",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`programVersionId` TEXT NOT NULL, `blockId` TEXT NOT NULL, `blockOrder` INTEGER NOT NULL, `displayName` TEXT, `roundingOverrideJson` TEXT, PRIMARY KEY(`programVersionId`, `blockId`), FOREIGN KEY(`programVersionId`) REFERENCES `loaded_program_version`(`programVersionId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "programVersionId",
+            "columnName": "programVersionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "blockId",
+            "columnName": "blockId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "blockOrder",
+            "columnName": "blockOrder",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "displayName",
+            "columnName": "displayName",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "roundingOverrideJson",
+            "columnName": "roundingOverrideJson",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "programVersionId",
+            "blockId"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": [
+          {
+            "table": "loaded_program_version",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "programVersionId"
+            ],
+            "referencedColumns": [
+              "programVersionId"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "loaded_program_week",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`programVersionId` TEXT NOT NULL, `weekId` TEXT NOT NULL, `blockId` TEXT NOT NULL, `weekIndex` INTEGER NOT NULL, `variantOf` TEXT, `variantLabel` TEXT, PRIMARY KEY(`programVersionId`, `weekId`), FOREIGN KEY(`programVersionId`, `blockId`) REFERENCES `loaded_program_block`(`programVersionId`, `blockId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "programVersionId",
+            "columnName": "programVersionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "weekId",
+            "columnName": "weekId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "blockId",
+            "columnName": "blockId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "weekIndex",
+            "columnName": "weekIndex",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "variantOf",
+            "columnName": "variantOf",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "variantLabel",
+            "columnName": "variantLabel",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "programVersionId",
+            "weekId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_loaded_program_week_programVersionId_blockId",
+            "unique": false,
+            "columnNames": [
+              "programVersionId",
+              "blockId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_loaded_program_week_programVersionId_blockId` ON `${TABLE_NAME}` (`programVersionId`, `blockId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "loaded_program_block",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "programVersionId",
+              "blockId"
+            ],
+            "referencedColumns": [
+              "programVersionId",
+              "blockId"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "loaded_session_template",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`programVersionId` TEXT NOT NULL, `sessionId` TEXT NOT NULL, `weekId` TEXT NOT NULL, `sessionIndex` INTEGER NOT NULL, `dayLabel` TEXT, `displayName` TEXT, PRIMARY KEY(`programVersionId`, `sessionId`), FOREIGN KEY(`programVersionId`, `weekId`) REFERENCES `loaded_program_week`(`programVersionId`, `weekId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "programVersionId",
+            "columnName": "programVersionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sessionId",
+            "columnName": "sessionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "weekId",
+            "columnName": "weekId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sessionIndex",
+            "columnName": "sessionIndex",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dayLabel",
+            "columnName": "dayLabel",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "displayName",
+            "columnName": "displayName",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "programVersionId",
+            "sessionId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_loaded_session_template_programVersionId_weekId",
+            "unique": false,
+            "columnNames": [
+              "programVersionId",
+              "weekId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_loaded_session_template_programVersionId_weekId` ON `${TABLE_NAME}` (`programVersionId`, `weekId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "loaded_program_week",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "programVersionId",
+              "weekId"
+            ],
+            "referencedColumns": [
+              "programVersionId",
+              "weekId"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "loaded_exercise_group",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`programVersionId` TEXT NOT NULL, `groupId` TEXT NOT NULL, `sessionId` TEXT NOT NULL, `groupOrder` INTEGER NOT NULL, `kind` TEXT NOT NULL, PRIMARY KEY(`programVersionId`, `groupId`), FOREIGN KEY(`programVersionId`, `sessionId`) REFERENCES `loaded_session_template`(`programVersionId`, `sessionId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "programVersionId",
+            "columnName": "programVersionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "groupId",
+            "columnName": "groupId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sessionId",
+            "columnName": "sessionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "groupOrder",
+            "columnName": "groupOrder",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kind",
+            "columnName": "kind",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "programVersionId",
+            "groupId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_loaded_exercise_group_programVersionId_sessionId",
+            "unique": false,
+            "columnNames": [
+              "programVersionId",
+              "sessionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_loaded_exercise_group_programVersionId_sessionId` ON `${TABLE_NAME}` (`programVersionId`, `sessionId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "loaded_session_template",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "programVersionId",
+              "sessionId"
+            ],
+            "referencedColumns": [
+              "programVersionId",
+              "sessionId"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "loaded_prescription_item",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`programVersionId` TEXT NOT NULL, `itemId` TEXT NOT NULL, `groupId` TEXT NOT NULL, `itemOrder` INTEGER NOT NULL, `prescribedExerciseId` TEXT NOT NULL, `role` TEXT NOT NULL, `perSide` INTEGER, `restSecondsHint` INTEGER, `restMaxSecondsHint` INTEGER, `warmupSetCount` INTEGER, `notesJson` TEXT NOT NULL, PRIMARY KEY(`programVersionId`, `itemId`), FOREIGN KEY(`programVersionId`, `groupId`) REFERENCES `loaded_exercise_group`(`programVersionId`, `groupId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "programVersionId",
+            "columnName": "programVersionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "itemId",
+            "columnName": "itemId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "groupId",
+            "columnName": "groupId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "itemOrder",
+            "columnName": "itemOrder",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "prescribedExerciseId",
+            "columnName": "prescribedExerciseId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "role",
+            "columnName": "role",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "perSide",
+            "columnName": "perSide",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "restSecondsHint",
+            "columnName": "restSecondsHint",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "restMaxSecondsHint",
+            "columnName": "restMaxSecondsHint",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "warmupSetCount",
+            "columnName": "warmupSetCount",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "notesJson",
+            "columnName": "notesJson",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "programVersionId",
+            "itemId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_loaded_prescription_item_programVersionId_groupId",
+            "unique": false,
+            "columnNames": [
+              "programVersionId",
+              "groupId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_loaded_prescription_item_programVersionId_groupId` ON `${TABLE_NAME}` (`programVersionId`, `groupId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "loaded_exercise_group",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "programVersionId",
+              "groupId"
+            ],
+            "referencedColumns": [
+              "programVersionId",
+              "groupId"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "loaded_set_prescription",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`programVersionId` TEXT NOT NULL, `setId` TEXT NOT NULL, `itemId` TEXT NOT NULL, `setOrder` INTEGER NOT NULL, `setKind` TEXT NOT NULL, PRIMARY KEY(`programVersionId`, `setId`), FOREIGN KEY(`programVersionId`, `itemId`) REFERENCES `loaded_prescription_item`(`programVersionId`, `itemId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "programVersionId",
+            "columnName": "programVersionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "setId",
+            "columnName": "setId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "itemId",
+            "columnName": "itemId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "setOrder",
+            "columnName": "setOrder",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "setKind",
+            "columnName": "setKind",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "programVersionId",
+            "setId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_loaded_set_prescription_programVersionId_itemId",
+            "unique": false,
+            "columnNames": [
+              "programVersionId",
+              "itemId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_loaded_set_prescription_programVersionId_itemId` ON `${TABLE_NAME}` (`programVersionId`, `itemId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "loaded_prescription_item",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "programVersionId",
+              "itemId"
+            ],
+            "referencedColumns": [
+              "programVersionId",
+              "itemId"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "loaded_prescription_target",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`programVersionId` TEXT NOT NULL, `setId` TEXT NOT NULL, `targetIndex` INTEGER NOT NULL, `kind` TEXT NOT NULL, `referenceId` TEXT, `loadValue` REAL, `loadUnit` TEXT, `reps` INTEGER, `repMin` INTEGER, `repMax` INTEGER, `percent` REAL, `percentMin` REAL, `percentMax` REAL, `amrap` INTEGER, `roundingIncrement` REAL, `roundingUnit` TEXT, `rpeTarget` REAL, `rpeRangeMin` REAL, `rpeRangeMax` REAL, `rpeCap` REAL, `rirTarget` INTEGER, `rirRangeMin` INTEGER, `rirRangeMax` INTEGER, `rirFloor` INTEGER, PRIMARY KEY(`programVersionId`, `setId`, `targetIndex`), FOREIGN KEY(`programVersionId`, `setId`) REFERENCES `loaded_set_prescription`(`programVersionId`, `setId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "programVersionId",
+            "columnName": "programVersionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "setId",
+            "columnName": "setId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "targetIndex",
+            "columnName": "targetIndex",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kind",
+            "columnName": "kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "referenceId",
+            "columnName": "referenceId",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "loadValue",
+            "columnName": "loadValue",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "loadUnit",
+            "columnName": "loadUnit",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "reps",
+            "columnName": "reps",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "repMin",
+            "columnName": "repMin",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "repMax",
+            "columnName": "repMax",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "percent",
+            "columnName": "percent",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "percentMin",
+            "columnName": "percentMin",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "percentMax",
+            "columnName": "percentMax",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "amrap",
+            "columnName": "amrap",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "roundingIncrement",
+            "columnName": "roundingIncrement",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "roundingUnit",
+            "columnName": "roundingUnit",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "rpeTarget",
+            "columnName": "rpeTarget",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "rpeRangeMin",
+            "columnName": "rpeRangeMin",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "rpeRangeMax",
+            "columnName": "rpeRangeMax",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "rpeCap",
+            "columnName": "rpeCap",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "rirTarget",
+            "columnName": "rirTarget",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "rirRangeMin",
+            "columnName": "rirRangeMin",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "rirRangeMax",
+            "columnName": "rirRangeMax",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "rirFloor",
+            "columnName": "rirFloor",
+            "affinity": "INTEGER",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "programVersionId",
+            "setId",
+            "targetIndex"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_loaded_prescription_target_programVersionId_setId",
+            "unique": false,
+            "columnNames": [
+              "programVersionId",
+              "setId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_loaded_prescription_target_programVersionId_setId` ON `${TABLE_NAME}` (`programVersionId`, `setId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "loaded_set_prescription",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "programVersionId",
+              "setId"
+            ],
+            "referencedColumns": [
+              "programVersionId",
+              "setId"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "program_run",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`programRunId` TEXT NOT NULL, `programVersionId` TEXT NOT NULL, `pinnedContentHash` TEXT NOT NULL, `startedAtEpochMillis` INTEGER NOT NULL, `status` TEXT NOT NULL, `chosenWeekVariantsJson` TEXT NOT NULL, `activeRunSlot` INTEGER, `updatedAtEpochMillis` INTEGER NOT NULL, PRIMARY KEY(`programRunId`), FOREIGN KEY(`programVersionId`) REFERENCES `loaded_program_version`(`programVersionId`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        "fields": [
+          {
+            "fieldPath": "programRunId",
+            "columnName": "programRunId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "programVersionId",
+            "columnName": "programVersionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pinnedContentHash",
+            "columnName": "pinnedContentHash",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startedAtEpochMillis",
+            "columnName": "startedAtEpochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "chosenWeekVariantsJson",
+            "columnName": "chosenWeekVariantsJson",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "activeRunSlot",
+            "columnName": "activeRunSlot",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "updatedAtEpochMillis",
+            "columnName": "updatedAtEpochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "programRunId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_program_run_programVersionId",
+            "unique": false,
+            "columnNames": [
+              "programVersionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_program_run_programVersionId` ON `${TABLE_NAME}` (`programVersionId`)"
+          },
+          {
+            "name": "index_program_run_activeRunSlot",
+            "unique": true,
+            "columnNames": [
+              "activeRunSlot"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_program_run_activeRunSlot` ON `${TABLE_NAME}` (`activeRunSlot`)"
+          },
+          {
+            "name": "index_program_run_startedAtEpochMillis",
+            "unique": false,
+            "columnNames": [
+              "startedAtEpochMillis"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_program_run_startedAtEpochMillis` ON `${TABLE_NAME}` (`startedAtEpochMillis`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "loaded_program_version",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "programVersionId"
+            ],
+            "referencedColumns": [
+              "programVersionId"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "schedule_occurrence",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`programRunId` TEXT NOT NULL, `occurrenceId` TEXT NOT NULL, `plannedEpochDay` INTEGER NOT NULL, `actualCompletionEpochDay` INTEGER, `blockId` TEXT NOT NULL, `weekId` TEXT NOT NULL, `sessionId` TEXT NOT NULL, `sessionIndex` INTEGER NOT NULL, `state` TEXT NOT NULL, `updatedAtEpochMillis` INTEGER NOT NULL, PRIMARY KEY(`programRunId`, `occurrenceId`), FOREIGN KEY(`programRunId`) REFERENCES `program_run`(`programRunId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "programRunId",
+            "columnName": "programRunId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "occurrenceId",
+            "columnName": "occurrenceId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "plannedEpochDay",
+            "columnName": "plannedEpochDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "actualCompletionEpochDay",
+            "columnName": "actualCompletionEpochDay",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "blockId",
+            "columnName": "blockId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "weekId",
+            "columnName": "weekId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sessionId",
+            "columnName": "sessionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sessionIndex",
+            "columnName": "sessionIndex",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "state",
+            "columnName": "state",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAtEpochMillis",
+            "columnName": "updatedAtEpochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "programRunId",
+            "occurrenceId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_schedule_occurrence_programRunId_plannedEpochDay_sessionIndex",
+            "unique": false,
+            "columnNames": [
+              "programRunId",
+              "plannedEpochDay",
+              "sessionIndex"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_schedule_occurrence_programRunId_plannedEpochDay_sessionIndex` ON `${TABLE_NAME}` (`programRunId`, `plannedEpochDay`, `sessionIndex`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "program_run",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "programRunId"
+            ],
+            "referencedColumns": [
+              "programRunId"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "program_run_reference_value",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`programRunId` TEXT NOT NULL, `referenceId` TEXT NOT NULL, `value` REAL NOT NULL, `unit` TEXT NOT NULL, `source` TEXT NOT NULL, `suppliedAtEpochMillis` INTEGER NOT NULL, PRIMARY KEY(`programRunId`, `referenceId`), FOREIGN KEY(`programRunId`) REFERENCES `program_run`(`programRunId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "programRunId",
+            "columnName": "programRunId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "referenceId",
+            "columnName": "referenceId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "value",
+            "columnName": "value",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "unit",
+            "columnName": "unit",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "source",
+            "columnName": "source",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "suppliedAtEpochMillis",
+            "columnName": "suppliedAtEpochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "programRunId",
+            "referenceId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_program_run_reference_value_programRunId",
+            "unique": false,
+            "columnNames": [
+              "programRunId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_program_run_reference_value_programRunId` ON `${TABLE_NAME}` (`programRunId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "program_run",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "programRunId"
+            ],
+            "referencedColumns": [
+              "programRunId"
+            ]
+          }
+        ]
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0ee7541b4fd958ab6c231c5118428f49')"
+    ]
+  }
+}

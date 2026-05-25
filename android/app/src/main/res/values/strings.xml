@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Liftorium</string>
-    <string name="phase1_placeholder_title">Liftorium</string>
-    <string name="phase1_placeholder_body">Phase 1 scaffold. Workout logging arrives in a later phase.</string>
 </resources>

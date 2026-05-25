@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "description": "Versioned Liftorium program-resource JSON Schema, fixtures, and Ajv-based validator. Used by tools/import (Phase 3) to validate finalized resources and by Android's ProgramResourceLoader (Phase 4) to validate before runtime load.",
+  "description": "Versioned Liftorium program-resource JSON Schema, fixtures, and Ajv-based validator. Used by tools/import (import-workflow) to validate finalized resources and by Android's ProgramResourceLoader (android-program-runner) to validate before runtime load.",
   "scripts": {
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
