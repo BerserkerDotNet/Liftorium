@@ -21,25 +21,17 @@ import org.junit.Rule
 import org.junit.Test
 
 /**
- * Paparazzi (LayoutLib-based) light-theme snapshots for every meaningful
- * android-program-runner UI state. Runs via `:app:recordPaparazziDebug`;
- * PNGs land under `app/src/test/snapshots/` (gitignored). Visual review
- * by the agent is required for any UI deliverable — see
- * `.github/skills/android-implementation/SKILL.md`.
- *
- * Dark-mode parity lives in [ProgramRunnerPaparazziDarkTest].
- *
- * Fidelity caveat: LayoutLib renders are close to but not identical to
- * a real device. Real-device evidence is still required for
- * runtime-critical UI per docs/testing-strategy.md.
+ * Dark-theme parity for [ProgramRunnerPaparazziTest]. Same scenarios,
+ * `darkTheme = true`. Snapshot filenames are distinct because Paparazzi
+ * keys them by FQ test class + method.
  */
-class ProgramRunnerPaparazziTest {
+class ProgramRunnerPaparazziDarkTest {
     @get:Rule
     val paparazzi: Paparazzi = Paparazzi(deviceConfig = DeviceConfig.PIXEL_5)
 
     @Composable
     private fun themed(content: @Composable () -> Unit) {
-        LiftoriumTheme(darkTheme = false) {
+        LiftoriumTheme(darkTheme = true) {
             Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                 content()
             }

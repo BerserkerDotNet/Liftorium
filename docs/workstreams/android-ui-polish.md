@@ -1,5 +1,21 @@
 # Android UI Polish Workstream
 
+## Status (2026-05-25)
+
+Scoped subset shipped:
+
+- ``:app/ui/theme/`` package with ``LiftoriumColorScheme`` (light + dark, steel/iron palette), ``LiftoriumMaterialTypography``, ``LiftoriumTypography.numeric`` (tabular numerals), ``LiftoriumSpacing``, ``LiftoriumDimens``, ``LiftoriumShapes``, ``LiftoriumTheme`` wrapper, ``LiftoriumTokens`` accessor.
+- ``:app/ui/components/`` shared primitives: ``StatusBadge`` + ``BadgeTone``, ``EmptyState``. ``SectionHeader`` / ``ValueRow`` were not promoted — no second caller in the current screens.
+- ``ProgramScreens.kt`` (508 lines, 6 public Composables) split under ``:app/ui/program/`` into one public Composable per file: ``ProgramLibraryScreen``, ``ProgramDetailScreen``, ``PendingReferencesDialog``, ``PendingValue``, ``WeekVariantPicker``, ``TodaySessionScreen``, ``ImportErrorBanner``, plus the internal ``ValidationStatusBadge`` adapter.
+- ``LiftoriumNavHost`` no longer self-wraps in ``MaterialTheme {}`` — theming is the caller's responsibility (``MainActivity``, Paparazzi helpers, ``ActivateFlowSemanticsTest`` updated).
+- Paparazzi: existing test class rethemed to ``LiftoriumTheme(darkTheme = false)``; new ``ProgramRunnerPaparazziDarkTest`` mirrors every snapshot in dark mode.
+- ``docs/design-system.md`` published.
+
+Still deferred to a future ``android-ui-polish`` session (originally listed below):
+
+- Navigation Compose adoption (``androidx.navigation:navigation-compose``) — ad-hoc ``NavRoute`` + ``mutableStateOf`` in ``LiftoriumNavHost`` is unchanged.
+- Brand identity: adaptive icon, monochrome icon, themed icon, launch screen, app name copy.
+
 ## Scope owned
 
 - Compose theme tokens for Liftorium: color scheme (light + dark), typography scale, spacing/density scale, shape scale.

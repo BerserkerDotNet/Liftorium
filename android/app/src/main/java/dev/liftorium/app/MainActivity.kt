@@ -11,16 +11,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import dev.liftorium.app.ui.LiftoriumNavHost
 import dev.liftorium.app.ui.bootstrapState
+import dev.liftorium.app.ui.theme.LiftoriumTheme
 
 /**
  * App entry point. Hosts the program library / detail / today flow
  * against the variant-aware `bootstrapState()` shim: in `debug` the
  * shim returns an in-memory sample library so Paparazzi/launch-time
  * have content; in `release` it returns an empty library so no sample
- * data ships. The `android-ui-polish` workstream replaces the raw
- * `MaterialTheme` with the canonical `LiftoriumTheme`; a later
- * `android-program-runner` follow-on slice replaces the bootstrap
- * shim with the wired manual DI container (Room +
+ * data ships. Future `android-program-runner` follow-on slice replaces
+ * the bootstrap shim with the wired manual DI container (Room +
  * ProgramResourceLoader + use cases).
  */
 class MainActivity : ComponentActivity() {
@@ -34,7 +33,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun LiftoriumApp() {
-    MaterialTheme {
+    LiftoriumTheme {
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
             LiftoriumNavHost(initial = bootstrapState())
         }
@@ -46,3 +45,4 @@ fun LiftoriumApp() {
 private fun LiftoriumAppPreview() {
     LiftoriumApp()
 }
+

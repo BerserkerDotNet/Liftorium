@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import dev.liftorium.app.ui.LiftoriumNavHost
 import dev.liftorium.app.ui.SampleStateFactory
+import dev.liftorium.app.ui.theme.LiftoriumTheme
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -39,7 +40,9 @@ class ActivateFlowSemanticsTest {
     @Test
     fun activate_stronglifts_goesStraightToToday() {
         composeTestRule.setContent {
-            LiftoriumNavHost(initial = SampleStateFactory.libraryWithMixedStatuses())
+            LiftoriumTheme {
+                LiftoriumNavHost(initial = SampleStateFactory.libraryWithMixedStatuses())
+            }
         }
 
         composeTestRule.onNodeWithText("StrongLifts 5x5").performClick()

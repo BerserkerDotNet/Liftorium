@@ -1,6 +1,5 @@
 package dev.liftorium.app.ui
 
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
@@ -8,12 +7,22 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import dev.liftorium.app.ui.program.PendingReferencesDialog
+import dev.liftorium.app.ui.program.ProgramDetailScreen
+import dev.liftorium.app.ui.program.ProgramLibraryScreen
+import dev.liftorium.app.ui.program.TodaySessionScreen
+import dev.liftorium.app.ui.program.WeekVariantPicker
 import dev.liftorium.domain.common.ProgramVersionId
 import kotlinx.collections.immutable.ImmutableList
 
 /**
  * android-program-runner stateless navigation host. Switches between Library / Detail /
  * Today screens using simple state, no Navigation Compose dependency.
+ *
+ * Theming: callers MUST wrap this composable in `LiftoriumTheme {}` (or
+ * a Material theme of their choice). The host no longer wraps itself —
+ * an inner `MaterialTheme {}` would have shadowed any outer
+ * `LiftoriumTheme` and reset colors/typography back to the M3 defaults.
  *
  * Activate flow:
  *  * Detail screen → Activate button →
@@ -35,69 +44,67 @@ public fun LiftoriumNavHost(
 ) {
     var state by remember { mutableStateOf(initial) }
 
-    MaterialTheme {
-        when (val s = state) {
-            is LiftoriumNavState.Library -> ProgramLibraryScreen(
-                versions = s.versions,
-                onSelectVersion = { id ->
-                    val detail = s.details[id] ?: return@ProgramLibraryScreen
-                    state = LiftoriumNavState.Detail(
-                        previous = s,
-                        detail = detail,
-                        today = s.todays[id],
-                        showPendingRefs = false,
-                        showVariantPicker = false,
-                    )
+    when (val s = state) {
+        is LiftoriumNavState.Library -> ProgramLibraryScreen(
+            versions = s.versions,
+            onSelectVersion = { id ->
+                val detail = s.details[id] ?: return@ProgramLibraryScreen
+                state = LiftoriumNavState.Detail(
+                    previous = s,
+                    detail = detail,
+                    today = s.todays[id],
+                    showPendingRefs = false,
+                    showVariantPicker = false,
+                )
+            },
+            onImportClick = { /* SAF wiring lives in MainActivity */ },
+            modifier = modifier,
+        )
+
+        is LiftoriumNavState.Detail -> {
+            ProgramDetailScreen(
+                detail = s.detail,
+                onBack = { state = s.previous },
+                onActivate = {
+                    state = when {
+                        s.detail.pendingReferences.isNotEmpty() -> s.copy(showPendingRefs = true)
+                        s.detail.variantGroups.isNotEmpty() -> s.copy(showVariantPicker = true)
+                        s.today != null -> LiftoriumNavState.Today(s.previous, s.today)
+                        else -> s
+                    }
                 },
-                onImportClick = { /* SAF wiring lives in MainActivity */ },
                 modifier = modifier,
             )
-
-            is LiftoriumNavState.Detail -> {
-                ProgramDetailScreen(
-                    detail = s.detail,
-                    onBack = { state = s.previous },
-                    onActivate = {
+            if (s.showPendingRefs) {
+                PendingReferencesDialog(
+                    references = s.detail.pendingReferences,
+                    onConfirm = {
                         state = when {
-                            s.detail.pendingReferences.isNotEmpty() -> s.copy(showPendingRefs = true)
-                            s.detail.variantGroups.isNotEmpty() -> s.copy(showVariantPicker = true)
+                            s.detail.variantGroups.isNotEmpty() ->
+                                s.copy(showPendingRefs = false, showVariantPicker = true)
                             s.today != null -> LiftoriumNavState.Today(s.previous, s.today)
-                            else -> s
+                            else -> s.copy(showPendingRefs = false)
                         }
                     },
-                    modifier = modifier,
+                    onDismiss = { state = s.copy(showPendingRefs = false) },
                 )
-                if (s.showPendingRefs) {
-                    PendingReferencesDialog(
-                        references = s.detail.pendingReferences,
-                        onConfirm = {
-                            state = when {
-                                s.detail.variantGroups.isNotEmpty() ->
-                                    s.copy(showPendingRefs = false, showVariantPicker = true)
-                                s.today != null -> LiftoriumNavState.Today(s.previous, s.today)
-                                else -> s.copy(showPendingRefs = false)
-                            }
-                        },
-                        onDismiss = { state = s.copy(showPendingRefs = false) },
-                    )
-                } else if (s.showVariantPicker) {
-                    WeekVariantPicker(
-                        groups = s.detail.variantGroups,
-                        onConfirm = {
-                            state = s.today?.let { LiftoriumNavState.Today(s.previous, it) }
-                                ?: s.copy(showVariantPicker = false)
-                        },
-                        onDismiss = { state = s.copy(showVariantPicker = false) },
-                    )
-                }
+            } else if (s.showVariantPicker) {
+                WeekVariantPicker(
+                    groups = s.detail.variantGroups,
+                    onConfirm = {
+                        state = s.today?.let { LiftoriumNavState.Today(s.previous, it) }
+                            ?: s.copy(showVariantPicker = false)
+                    },
+                    onDismiss = { state = s.copy(showVariantPicker = false) },
+                )
             }
-
-            is LiftoriumNavState.Today -> TodaySessionScreen(
-                today = s.today,
-                onBack = { state = s.previous },
-                modifier = modifier,
-            )
         }
+
+        is LiftoriumNavState.Today -> TodaySessionScreen(
+            today = s.today,
+            onBack = { state = s.previous },
+            modifier = modifier,
+        )
     }
 }
 
@@ -124,3 +131,4 @@ public sealed interface LiftoriumNavState {
         val today: TodaySessionUi,
     ) : LiftoriumNavState
 }
+
