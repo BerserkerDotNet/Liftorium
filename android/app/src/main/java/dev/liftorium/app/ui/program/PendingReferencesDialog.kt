@@ -16,7 +16,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -29,7 +28,32 @@ import dev.liftorium.domain.common.WeightUnit
 import kotlinx.collections.immutable.ImmutableList
 
 /**
- * Modal dialog collecting runtime training-max / 1RM values for every
+ * Pure validation helper for the pending-references dialog. Returns the
+ * fully-resolved values map (only entries where every reference has a
+ * positive numeric value); callers compare `result.size == references.size`
+ * to decide whether Activate is enabled.
+ *
+ * Lives outside the Composable so it can be unit-tested without spinning
+ * up Compose / Robolectric (AlertDialog windows are unreliable under
+ * Robolectric — see `ActivateFlowSemanticsTest` notes).
+ */
+internal fun resolvePendingValues(
+    references: List<PendingReferenceRow>,
+    rawValues: Map<String, String>,
+    units: Map<String, WeightUnit>,
+): Map<String, PendingValue> =
+    references.mapNotNull { ref ->
+        val raw = rawValues[ref.referenceId]?.trim().orEmpty()
+        val parsed = raw.toDoubleOrNull()
+        if (parsed != null && parsed > 0.0) {
+            ref.referenceId to PendingValue(parsed, units[ref.referenceId] ?: ref.defaultUnit)
+        } else {
+            null
+        }
+    }.toMap()
+
+/**
+ * Modal dialog collecting runtime 1RM values for every
  * unsupplied first-week reference. Returns the values via
  * [onConfirm] keyed by referenceId; raises [onDismiss] on cancel.
  */
@@ -46,26 +70,12 @@ public fun PendingReferencesDialog(
         }
     }
 
-    val resolved = remember(references) {
-        derivedStateOf {
-            references.mapNotNull { ref ->
-                val raw = rawValues[ref.referenceId]?.trim().orEmpty()
-                val parsed = raw.toDoubleOrNull()
-                if (parsed != null && parsed > 0.0) {
-                    ref.referenceId to PendingValue(parsed, units[ref.referenceId] ?: ref.defaultUnit)
-                } else {
-                    null
-                }
-            }.toMap()
-        }
-    }.value
-    val allValid = remember(references) {
-        derivedStateOf { resolved.size == references.size }
-    }.value
+    val resolved = resolvePendingValues(references, rawValues, units)
+    val allValid = resolved.size == references.size
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Enter training maxes") },
+        title = { Text("Enter 1RMs") },
         text = {
             Column(
                 modifier = Modifier

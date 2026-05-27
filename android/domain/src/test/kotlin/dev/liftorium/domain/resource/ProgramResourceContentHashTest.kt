@@ -202,7 +202,7 @@ class ProgramResourceContentHashTest {
             put("target", buildJsonObject {
                 put("kind", JsonPrimitive("percent"))
                 put("percent", JsonPrimitive(77.5))
-                put("referenceId", JsonPrimitive("tm-squat"))
+                put("referenceId", JsonPrimitive("orm-squat"))
             })
         }
 
@@ -218,7 +218,7 @@ class ProgramResourceContentHashTest {
                 put("kind", JsonPrimitive("percent"))
                 put("percentMin", JsonPrimitive(75.0))
                 put("percentMax", JsonPrimitive(80.0))
-                put("referenceId", JsonPrimitive("tm-squat"))
+                put("referenceId", JsonPrimitive("orm-squat"))
             })
         }
 

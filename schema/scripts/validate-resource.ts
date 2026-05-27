@@ -129,7 +129,7 @@ const PROGRAM_AREA_BY_PREFIX: Readonly<Record<string, string>> = {
   status: 'activation status',
   construct: 'program constructs',
   exercise: 'exercise catalog',
-  reference: 'training maxes / required references',
+  reference: '1RMs / required references',
   structure: 'program structure',
   progression: 'progression rules',
   provenance: 'source provenance',
@@ -162,7 +162,7 @@ function operatorActionFor(code: string, severity: Severity): string {
   if (code === 'exercise.missing_required_canonical')
     return 'Add the canonical exercise to exerciseCatalog or alias it.';
   if (code === 'reference.missing_first_week_value')
-    return 'Provide the first-week training max / required value before activation.';
+    return 'Provide the first-week 1RM / required value before activation.';
   if (code === 'reference.missing_later_week_value')
     return 'Provide the value before the affected workout starts; activation may proceed.';
   if (code.startsWith('structure.'))

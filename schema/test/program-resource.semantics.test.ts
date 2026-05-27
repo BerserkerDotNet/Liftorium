@@ -303,11 +303,11 @@ describe('validateProgramResourceSemantics — programWeek variants', () => {
     // variant of week 1 must fire missing_first_week (critical), not the
     // missing_later_week warning.
     const r = loadVariantBase();
-    // Mark the existing 'tm-squat' as not supplied; null its consumption in
+    // Mark the existing 'orm-squat' as not supplied; null its consumption in
     // the base week-1 sessions so the only consumption is in week-1-alt (the variant).
     const refs = (r as unknown as { requiredReferences: Array<Record<string, unknown>> })
       .requiredReferences;
-    const tm = refs.find((x) => x['id'] === 'tm-squat');
+    const tm = refs.find((x) => x['id'] === 'orm-squat');
     if (tm) tm['supplied'] = false;
 
     // Strip percent targets from base week-1, keep them only on week-1-alt.
@@ -483,12 +483,12 @@ describe('validateProgramResourceSemantics — prescription range extensions', (
     const r = loadExtensionBase();
     const refs = (r as unknown as { requiredReferences: Array<Record<string, unknown>> })
       .requiredReferences;
-    const tm = refs.find((x) => x['id'] === 'tm-squat');
+    const tm = refs.find((x) => x['id'] === 'orm-squat');
     if (tm) tm['supplied'] = false;
     const item = firstItem(r);
     const set = (item['setPrescriptions'] as Array<Record<string, unknown>>)[0];
     set['targets'] = [
-      { kind: 'percent', percentMin: 75, percentMax: 80, referenceId: 'tm-squat' },
+      { kind: 'percent', percentMin: 75, percentMax: 80, referenceId: 'orm-squat' },
     ];
     const report = validateProgramResourceSemantics(r);
     expect(report.issues.some((i) => i.code === 'reference.missing_first_week')).toBe(true);
@@ -499,7 +499,7 @@ describe('validateProgramResourceSemantics — prescription range extensions', (
     const item = firstItem(r);
     const set = (item['setPrescriptions'] as Array<Record<string, unknown>>)[0];
     set['targets'] = [
-      { kind: 'percent', percent: 75, referenceId: 'tm-squat' },
+      { kind: 'percent', percent: 75, referenceId: 'orm-squat' },
       { kind: 'rpe', target: 7.5 },
     ];
     const report = validateProgramResourceSemantics(r);

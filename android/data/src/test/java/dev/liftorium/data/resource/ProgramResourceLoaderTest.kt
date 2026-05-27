@@ -343,7 +343,7 @@ class ProgramResourceLoaderTest {
     private fun mutateTargetSet(set: JsonObject): JsonObject {
         val percentRange = buildJsonObject {
             put("kind", JsonPrimitive("percent"))
-            put("referenceId", JsonPrimitive("tm-squat"))
+            put("referenceId", JsonPrimitive("orm-squat"))
             put("percentMin", JsonPrimitive(70.0))
             put("percentMax", JsonPrimitive(75.0))
             put("reps", JsonPrimitive(5))

@@ -142,7 +142,7 @@ class RunMapperTest {
 
     private fun sampleReferenceValue() = ProgramRunReferenceValue(
         programRunId = ProgramRunId("r1"),
-        referenceId = "tm-bench",
+        referenceId = "orm-bench",
         value = 100.0,
         unit = WeightUnit.Kg,
         source = ReferenceValueSource.RuntimeInjection,

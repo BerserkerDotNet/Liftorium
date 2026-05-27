@@ -14,7 +14,7 @@
 - `docs/mvp-roadmap.md`
 - `docs/workstreams/android-app.md`
 - `docs/workstreams/android-workout-logging.md`
-- `docs/workstreams/android-training-max-progression.md`
+- `docs/workstreams/android-one-rep-max-progression.md`
 - `docs/workstreams/android-catalog-substitutions.md`
 - `docs/product.md`: A5 and supporting A3/A8 rows.
 - `docs/architecture.md`: stats, PR, e1RM, substitution, and rounding rules.

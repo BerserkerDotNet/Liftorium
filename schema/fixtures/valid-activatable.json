@@ -6,7 +6,7 @@
     "versionLabel": "5/3/1 BBB v1",
     "displayName": "5/3/1 BBB",
     "authorAttribution": "Synthetic Liftorium fixture",
-    "contentHash": "cdf2810423fba66264e2679c4422e14c504101d181bc527d24453cf3c635b67c"
+    "contentHash": "d75b6976e6f6fd6f60498a2aa680787f0df30855c195f88548c5a94a74c220ce"
   },
   "validationStatus": "activatable",
   "validationIssues": [],
@@ -77,8 +77,8 @@
   ],
   "requiredReferences": [
     {
-      "id": "tm-squat",
-      "referenceType": "training_max",
+      "id": "orm-squat",
+      "referenceType": "one_rep_max",
       "exerciseId": "back-squat",
       "firstRunnableWeekIndex": 1,
       "supplied": true,
@@ -86,8 +86,8 @@
       "unit": "lb"
     },
     {
-      "id": "tm-bench",
-      "referenceType": "training_max",
+      "id": "orm-bench",
+      "referenceType": "one_rep_max",
       "exerciseId": "bench-press",
       "firstRunnableWeekIndex": 1,
       "supplied": true,
@@ -95,8 +95,8 @@
       "unit": "lb"
     },
     {
-      "id": "tm-deadlift",
-      "referenceType": "training_max",
+      "id": "orm-deadlift",
+      "referenceType": "one_rep_max",
       "exerciseId": "deadlift",
       "firstRunnableWeekIndex": 2,
       "supplied": true,
@@ -104,8 +104,8 @@
       "unit": "lb"
     },
     {
-      "id": "tm-ohp",
-      "referenceType": "training_max",
+      "id": "orm-ohp",
+      "referenceType": "one_rep_max",
       "exerciseId": "overhead-press",
       "firstRunnableWeekIndex": 2,
       "supplied": true,
@@ -149,7 +149,7 @@
                               {
                                 "kind": "percent",
                                 "percent": 65,
-                                "referenceId": "tm-squat",
+                                "referenceId": "orm-squat",
                                 "reps": 5
                               }
                             ]
@@ -162,7 +162,7 @@
                               {
                                 "kind": "percent",
                                 "percent": 75,
-                                "referenceId": "tm-squat",
+                                "referenceId": "orm-squat",
                                 "reps": 5
                               }
                             ]
@@ -175,7 +175,7 @@
                               {
                                 "kind": "percent",
                                 "percent": 85,
-                                "referenceId": "tm-squat",
+                                "referenceId": "orm-squat",
                                 "amrap": true,
                                 "reps": 5
                               }
@@ -204,7 +204,7 @@
                               {
                                 "kind": "percent",
                                 "percent": 50,
-                                "referenceId": "tm-squat",
+                                "referenceId": "orm-squat",
                                 "reps": 10
                               }
                             ]
@@ -217,7 +217,7 @@
                               {
                                 "kind": "percent",
                                 "percent": 50,
-                                "referenceId": "tm-squat",
+                                "referenceId": "orm-squat",
                                 "reps": 10
                               }
                             ]
@@ -253,7 +253,7 @@
                               {
                                 "kind": "percent",
                                 "percent": 65,
-                                "referenceId": "tm-bench",
+                                "referenceId": "orm-bench",
                                 "reps": 5
                               }
                             ]
@@ -266,7 +266,7 @@
                               {
                                 "kind": "percent",
                                 "percent": 75,
-                                "referenceId": "tm-bench",
+                                "referenceId": "orm-bench",
                                 "reps": 5
                               }
                             ]
@@ -279,7 +279,7 @@
                               {
                                 "kind": "percent",
                                 "percent": 85,
-                                "referenceId": "tm-bench",
+                                "referenceId": "orm-bench",
                                 "amrap": true,
                                 "reps": 5
                               }
@@ -321,7 +321,7 @@
                               {
                                 "kind": "percent",
                                 "percent": 70,
-                                "referenceId": "tm-deadlift",
+                                "referenceId": "orm-deadlift",
                                 "reps": 3
                               }
                             ]
@@ -334,7 +334,7 @@
                               {
                                 "kind": "percent",
                                 "percent": 80,
-                                "referenceId": "tm-deadlift",
+                                "referenceId": "orm-deadlift",
                                 "reps": 3
                               }
                             ]
@@ -347,7 +347,7 @@
                               {
                                 "kind": "percent",
                                 "percent": 90,
-                                "referenceId": "tm-deadlift",
+                                "referenceId": "orm-deadlift",
                                 "amrap": true,
                                 "reps": 3
                               }
@@ -383,7 +383,7 @@
                               {
                                 "kind": "percent",
                                 "percent": 70,
-                                "referenceId": "tm-ohp",
+                                "referenceId": "orm-ohp",
                                 "reps": 3
                               },
                               {
@@ -400,7 +400,7 @@
                               {
                                 "kind": "percent",
                                 "percent": 80,
-                                "referenceId": "tm-ohp",
+                                "referenceId": "orm-ohp",
                                 "reps": 3
                               },
                               {

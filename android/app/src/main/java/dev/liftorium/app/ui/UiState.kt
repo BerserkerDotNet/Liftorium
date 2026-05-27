@@ -72,6 +72,7 @@ public data class VariantOptionUi(
 @Immutable
 public data class TodaySessionUi(
     val programRunId: ProgramRunId,
+    val plannedOccurrenceId: String,
     val programDisplayName: String,
     val sessionTitle: String,
     val plannedEpochDay: Long,

@@ -106,7 +106,7 @@ What to capture (everything stays in-session, never committed):
 - Sheet names, row/column dimensions, merged ranges.
 - The program's block/week/session/exercise layout convention.
 - Where prescriptions live (e.g. `Week1!C5` reads `"5x5 @ 85%"`).
-- Where training maxes / reference values live.
+- Where 1RMs / reference values live.
 - Any free-text notes that look like progression rules or constructs.
 
 ### Step 1.1 — Header-row recipe (when the first row is not the header)
@@ -176,7 +176,7 @@ operator decision. The validation CLI flags unknown
 that issue stays critical until the operator approves the candidate or
 maps it to an alias.
 
-## Step 4 — Reference values (training maxes)
+## Step 4 — Reference values (1RMs)
 
 For each percent-based prescription (`targetKind: "percent"`):
 
@@ -184,7 +184,7 @@ For each percent-based prescription (`targetKind: "percent"`):
 - That reference must be declared in `requiredReferences[]`.
 - Required references are emitted as `supplied: false` at import
   time. The runtime `ProgramResourceLoader` (android-program-runner) collects the
-  user's actual training-max / one-rep-max values at activation, but
+  user's actual 1RM values at activation, but
   it does NOT flip `supplied: true` on the loaded version row. The
   loaded version is immutable; runtime values are stored separately
   on the program-run row as `ProgramRunReferenceValueEntity`
@@ -260,7 +260,7 @@ Use these deterministic rules so reruns produce the same structure:
 | Prescription item IDs | `<groupId>-i<n>` |
 | Set prescription IDs | `<itemId>-set<n>` |
 | Exercise canonical ID | kebab-case of operator-approved display name; lowercase ASCII; spaces and `/` → `-`; consecutive `-` collapsed |
-| Required reference ID | `tm-<exerciseId>` for training maxes; `ref-<slug>` for other references |
+| Required reference ID | `orm-<exerciseId>` for 1RMs; `ref-<slug>` for other references |
 | Alias text source | `"operator"` if from operator input, `"source"` if derived from workbook |
 
 Ordering ties are broken by (row, column, then insertion order).
@@ -280,7 +280,7 @@ Specificity, most → least:
    that is NOT a formula derived from the user's TM, encode as a
    `weight` target with `value` (or `valueMin`/`valueMax` for a range)
    and `unit`.
-2. **Percent of training max / one-rep max**. Encode as a `percent`
+2. **Percent of 1RM**. Encode as a `percent`
    target with `referenceId`. Single percent → `percent`. Range
    percent → `percentMin` + `percentMax` (mutually exclusive with
    `percent`; equal bounds collapse to `percent`).
@@ -402,7 +402,7 @@ Exit codes:
 | --- | --- | --- |
 | 0 | `activatable` | Ship it. |
 | 1 | `activatable_with_warnings` | Ship; operator should see warnings. |
-| 1 | `pending_runtime_references` | Ship; runtime injects the unsupplied training maxes at activation (see Step 4.2). Do NOT iterate on the `reference.missing_first_week` criticals — they are the gate, not a defect. |
+| 1 | `pending_runtime_references` | Ship; runtime injects the unsupplied 1RMs at activation (see Step 4.2). Do NOT iterate on the `reference.missing_first_week` criticals — they are the gate, not a defect. |
 | 2 | `blocked` | One or more critical issues OTHER than runtime-pending refs. Go to Step 8. |
 | 3 | `rejected` | Schema-invalid. The structure itself is wrong. |
 | 4 | CLI usage error / unreadable file | Fix the invocation. |

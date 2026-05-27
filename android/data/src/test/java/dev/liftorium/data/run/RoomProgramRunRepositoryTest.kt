@@ -80,9 +80,9 @@ class RoomProgramRunRepositoryTest {
         loadVersion(
             programVersionId = "p@v1",
             requiredReferences = listOf(
-                requiredRef("p@v1", "tm-bench", supplied = false, firstWeek = 1, type = "training_max"),
-                requiredRef("p@v1", "tm-squat", supplied = true, firstWeek = 1, type = "training_max"),
-                requiredRef("p@v1", "tm-row", supplied = false, firstWeek = 2, type = "training_max"),
+                requiredRef("p@v1", "orm-bench", supplied = false, firstWeek = 1, type = "one_rep_max"),
+                requiredRef("p@v1", "orm-squat", supplied = true, firstWeek = 1, type = "one_rep_max"),
+                requiredRef("p@v1", "orm-row", supplied = false, firstWeek = 2, type = "one_rep_max"),
                 requiredRef("p@v1", "macro-cal", supplied = false, firstWeek = 1, type = "macro_calorie"),
             ),
             blocks = listOf(LoadedProgramBlockEntity("p@v1", "b1", 1, null, null)),
@@ -92,7 +92,7 @@ class RoomProgramRunRepositoryTest {
 
         val prereqs = repository.loadPrerequisites(ProgramVersionId("p@v1"))
         assertNotNull(prereqs)
-        assertEquals(setOf("tm-bench"), prereqs.requiredFirstWeekReferenceIds)
+        assertEquals(setOf("orm-bench"), prereqs.requiredFirstWeekReferenceIds)
         assertTrue(prereqs.weekVariantGroups.isEmpty())
         assertEquals(1, prereqs.weekOrder.size)
         assertEquals(listOf("s1"), prereqs.sessionsByWeek["w1"]?.map { it.sessionId })
@@ -134,7 +134,7 @@ class RoomProgramRunRepositoryTest {
             runtimeReferenceValues = listOf(
                 ProgramRunReferenceValue(
                     programRunId = ProgramRunId("run-1"),
-                    referenceId = "tm-bench",
+                    referenceId = "orm-bench",
                     value = 100.0,
                     unit = WeightUnit.Kg,
                     source = ReferenceValueSource.RuntimeInjection,

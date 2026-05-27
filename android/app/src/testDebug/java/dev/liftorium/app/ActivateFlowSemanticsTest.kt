@@ -7,6 +7,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import dev.liftorium.app.ui.LiftoriumNavHost
+import dev.liftorium.app.ui.NavActivateResult
 import dev.liftorium.app.ui.SampleStateFactory
 import dev.liftorium.app.ui.theme.LiftoriumTheme
 import org.junit.Rule
@@ -39,9 +40,17 @@ class ActivateFlowSemanticsTest {
 
     @Test
     fun activate_stronglifts_goesStraightToToday() {
+        val library = SampleStateFactory.libraryWithMixedStatuses()
         composeTestRule.setContent {
             LiftoriumTheme {
-                LiftoriumNavHost(initial = SampleStateFactory.libraryWithMixedStatuses())
+                LiftoriumNavHost(
+                    initial = library,
+                    onActivate = { vid, _, _ ->
+                        val today = library.todays[vid]
+                        if (today != null) NavActivateResult.Success(today)
+                        else NavActivateResult.Failure("no preview today for $vid")
+                    },
+                )
             }
         }
 

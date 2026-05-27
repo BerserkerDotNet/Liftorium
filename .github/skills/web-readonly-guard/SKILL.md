@@ -1,6 +1,6 @@
 ---
 name: web-readonly-guard
-description: Use when a Liftorium Web change touches data clients, persistence/offline behavior, workout sessions, substitutions, training maxes, program runs, timer state, or Web capability copy. Checks MVP read-only boundaries.
+description: Use when a Liftorium Web change touches data clients, persistence/offline behavior, workout sessions, substitutions, 1RMs, program runs, timer state, or Web capability copy. Checks MVP read-only boundaries.
 ---
 
 # Web Read-Only Guard
@@ -15,7 +15,7 @@ description: Use when a Liftorium Web change touches data clients, persistence/o
 
 - No workout logging mutation path exists.
 - No substitution mutation path exists.
-- No training max mutation path exists.
+- No 1RM mutation path exists.
 - No program-run mutation path exists.
 - No timer-state mutation path exists.
 - No offline workout logging, locked-phone timer, or live Android sync claim exists.

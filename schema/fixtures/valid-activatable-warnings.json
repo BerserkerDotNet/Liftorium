@@ -5,7 +5,7 @@
     "programVersionId": "warnings-fixture-v1",
     "versionLabel": "Warnings v1",
     "displayName": "Warnings-only fixture",
-    "contentHash": "35bc70553972d2631b6750eb819ab65a117bb2f6e16f2d66b21b593e4036ab5d"
+    "contentHash": "6520addd743e44136490023c1d51761f50ecd5a2527a303aa4d0a7b1b96108c7"
   },
   "validationStatus": "activatable",
   "validationIssues": [
@@ -38,8 +38,8 @@
   ],
   "requiredReferences": [
     {
-      "id": "tm-squat",
-      "referenceType": "training_max",
+      "id": "orm-squat",
+      "referenceType": "one_rep_max",
       "exerciseId": "back-squat",
       "firstRunnableWeekIndex": 1,
       "supplied": true,
@@ -48,7 +48,7 @@
     },
     {
       "id": "tm-front-squat",
-      "referenceType": "training_max",
+      "referenceType": "one_rep_max",
       "exerciseId": "front-squat",
       "firstRunnableWeekIndex": 2,
       "supplied": false
@@ -93,7 +93,7 @@
                               {
                                 "kind": "percent",
                                 "percent": 70,
-                                "referenceId": "tm-squat",
+                                "referenceId": "orm-squat",
                                 "reps": 5
                               }
                             ]

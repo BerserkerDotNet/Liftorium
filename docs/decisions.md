@@ -14,6 +14,54 @@ Use this file to ground future Copilot actions. Every important architecture or 
 - Consequences:
 - Related docs/tests/code:
 
+## 2026-05-25: Training max concept removed; 1RM is the only user-supplied reference
+
+- Status: accepted
+- Context: The schema, domain, and UI carried two parallel reference concepts: `training_max` (Wendler-style submaximal anchor, typically 85–90% of true 1RM) and `one_rep_max`. In practice the app collected one value per lift from the user, labeled it "Training max" in some surfaces and "1RM" in others, and stored it under the `training_max` enum slot for 5/3/1-derived programs. During dogfooding the user could not tell which value to enter (true max vs adjusted training max), and the BBB fixture's percentages were calibrated against TM rather than 1RM, producing inconsistent working weights.
+- Decision: Remove the `training_max` concept from the product surface entirely. The schema `referenceType` enum is reduced to `["one_rep_max", "bodyweight"]`. The user always enters a true 1RM. Programs that traditionally used a separate training max (e.g., 5/3/1) must encode the training-max adjustment into the target percentages themselves — for example, BBB's "65% TM" of a 90%-TM becomes "0.585 × 1RM" expressed as a percent target. The bundled 5/3/1 BBB fixture has been recalibrated under this convention.
+- Rationale: One concept, one label, one stored type is dramatically simpler for users to reason about, and removes a class of "what does this number mean" import-time defects. Authors of progression-style programs already think in terms of the user's true 1RM when designing percentages; baking the TM adjustment into the percentage column at authoring time is closer to the spreadsheet they're translating anyway.
+- Alternatives considered:
+  - Keep both enum values and let authors choose — rejected: the user can't pick correctly without reading the program author's intent, and the UI cannot disambiguate at entry time.
+  - Auto-derive TM = 0.9 × 1RM internally — rejected: traditional 5/3/1 uses 0.9, but BBB variants, Texas Method, RTS, and others use different anchors. Hardcoding one ratio leaks a program assumption into the platform.
+- Consequences:
+  - Schema-breaking change to `referenceType` enum. No real-world resources exist yet so the migration cost is zero today; any future archived resource that referenced `training_max` will need to be re-imported.
+  - All schema fixtures, examples, the BBB asset, and the schema/Kotlin `contentHash` constants have been regenerated.
+  - Domain `ReferenceType.TrainingMax` removed; `RUNTIME_REQUIRED_REFERENCE_TYPES = setOf("one_rep_max")`. The activation gate still blocks on first-week missing 1RMs (the rule is renamed, not relaxed).
+  - All UI strings ("Training max" / "% TM") replaced with "1RM" / "% 1RM". The pending-references dialog title is "Enter 1RMs".
+  - Workstream `android-training-max-progression` renamed to `android-one-rep-max-progression`. `TrainingMaxService`/`TrainingMaxEntry` renamed to `OneRepMaxService`/`OneRepMaxEntry` in architecture docs.
+  - Supersedes the relevant clauses of prior TM-bearing decisions: 2026-05-23 pending_runtime_references status (TM-specific language replaced with 1RM), 2026-05-23 per-program-run runtime reference injection (the entity stores 1RM values, not TM values). The activation/runtime semantics described in those ADRs are unchanged; only the label and stored enum value change.
+- Related docs/tests/code: `schema/program-resource.schema.json`, `schema/examples/*`, `schema/fixtures/*`, `schema/test/program-resource.semantics.test.ts`, `android/app/src/main/assets/programs/example-5-3-1-bbb.json`, `android/domain/src/main/kotlin/dev/liftorium/domain/resource/ProgramResourceEnums.kt`, `android/domain/src/main/kotlin/dev/liftorium/domain/weight/MRound.kt`, `android/data/src/main/java/dev/liftorium/data/workout/RoomWorkoutLoggingRepository.kt`, `android/app/src/main/java/dev/liftorium/app/ui/workout/*`, `docs/workstreams/android-one-rep-max-progression.md`, `docs/architecture.md`, `docs/mvp-roadmap.md`, `Liftorium-Product-Requirements.md`.
+
+## 2026-05-25: Active workout breadcrumb replaces internal run/version IDs in the UI
+
+- Status: accepted
+- Context: The first emulator-verified pass of the active workout screen rendered "Run \<UUID\>" and "Pinned version \<UUID\>" at the top of the screen — internal identifiers that are useful for debugging but meaningless to a user. The user requested a friendlier label.
+- Decision: The active workout screen renders a breadcrumb `<programDisplayName> · Cycle <n> · Week <n> · <sessionDisplayName>` instead of raw IDs. The breadcrumb is computed in the data layer's `RoomWorkoutLoggingRepository` by joining the open session's `programRunId` → `LoadedProgramVersionEntity.displayName`, the planned `ScheduleOccurrenceEntity` row, and the corresponding `LoadedProgramBlock` (`blockOrder` → cycle) + `LoadedProgramWeek` (`weekIndex`) + `LoadedSessionTemplate` (`displayName`) rows. It surfaces as `WorkoutBreadcrumb` on the domain `WorkoutSessionAggregate` and is rendered via `ActiveWorkoutUiState.title` + `subtitle`.
+- Rationale: Source every breadcrumb field from rows that already exist on disk so the label survives process restart for free — no new Room table, no new migration. The block-order-as-cycle simplification is acceptable for the MVP because every bundled program has exactly one block per cycle; multi-block-per-cycle programs are a future workstream concern.
+- Alternatives considered:
+  - Denormalize the breadcrumb onto the `WorkoutSession` row — rejected: would have required a Room migration and another sync-metadata audit step for a purely cosmetic field.
+  - Compute the breadcrumb in the ViewModel from in-memory program-version state — rejected: process-death recovery would either lose the label or require re-loading the program version on every cold start, both worse than a Room join.
+- Consequences:
+  - `WorkoutSessionAggregate` gained an optional `breadcrumb: WorkoutBreadcrumb?` field. Existing tests that built aggregates by hand still compile because the field defaults to null.
+  - The breadcrumb is null when the planned occurrence or any joined row is missing (defensive fallback for partially-loaded fixtures). The UI gracefully omits the subtitle in that case.
+  - `cycleIndex` for multi-block-per-cycle programs is provisional and will be revisited when the `android-one-rep-max-progression` workstream lands proper cycle tracking on `ProgramRun`.
+- Related docs/tests/code: `android/domain/src/main/kotlin/dev/liftorium/domain/workout/WorkoutSession.kt`, `android/data/src/main/java/dev/liftorium/data/workout/RoomWorkoutLoggingRepository.kt`, `android/app/src/main/java/dev/liftorium/app/ui/workout/ActiveWorkoutScreen.kt`, `android/app/src/main/java/dev/liftorium/app/ui/workout/ActiveWorkoutUiState.kt`.
+
+## 2026-05-25: Excel-MROUND is the canonical weight-rounding formula
+
+- Status: accepted
+- Context: The original `RoomWorkoutLoggingRepository.buildTarget` had three independent bugs that surfaced when the user reviewed the first running workout: (1) it multiplied the schema-stored percent integer (0–100) by the reference weight without dividing by 100, producing 6500% targets; (2) it ignored conjunctive target rows (a set with both a percent and an RPE cap), so the displayed weight dropped its companion RPE; (3) it had no rounding step at all, producing fractional working weights like 204.75 lb. The user provided the exact formula they want, matching the BBB Excel workbook the program was imported from: `=IF(unit="kg", MROUND(value, 2.5), MROUND(value, 5))`.
+- Decision: Introduce `dev.liftorium.domain.weight.mround(value: Double, multiple: Double): Double` as the single source of truth for weight rounding. It mirrors Excel's MROUND: half-away-from-zero rounding, with sign-aware tie-breaking for negative inputs. `buildTarget` divides percent by 100, merges conjunctive target rows via `firstNotNullOfOrNull` per orthogonal field, and rounds via `mround`. Rounding precedence is target `roundingIncrement`/`roundingUnit` → program `programDefaults.RoundingOverride` (decoded from the stored JSON blob on `LoadedProgramVersionEntity`) → per-unit fallback (5 lb / 2.5 kg). The bundled BBB fixture's `roundingIncrement` was corrected from 2.5 to 5 to match the spreadsheet.
+- Rationale: One helper, no per-call-site rounding logic, deterministic test coverage. The user pinned the formula explicitly; mirroring Excel byte-for-byte (including sign behaviour) keeps imported programs producing the exact same working weights as the source spreadsheet, which is the single most-watched correctness criterion when importing real coaching programs.
+- Alternatives considered:
+  - Use `Math.round(...)` with manual scaling — rejected: rounds half-to-even on the JVM in some cases, which deviates from Excel and would silently drift on .5 boundaries.
+  - Push rounding into a domain `WeightCalculator` service — deferred: the only current caller is `buildTarget`. Promote when a second caller appears, per the codebase's "no utility files until two callers" convention.
+- Consequences:
+  - BBB squat working sets at a 315 lb 1RM now show 205 / 235 / 270 lb (65/75/85%) and 160 lb (50% BBB back-off), matching the source workbook.
+  - 10 unit tests in `MRoundTest` cover the BBB anchor values, kg 2.5 ties, negatives, and require-guard input rejection.
+  - Conjunctive percent+RPE targets now display both the calculated weight and the RPE companion, satisfying the Target Specificity contract in `docs/workstreams/android-one-rep-max-progression.md`.
+- Related docs/tests/code: `android/domain/src/main/kotlin/dev/liftorium/domain/weight/MRound.kt`, `android/domain/src/test/kotlin/dev/liftorium/domain/weight/MRoundTest.kt`, `android/data/src/main/java/dev/liftorium/data/workout/RoomWorkoutLoggingRepository.kt`, `android/app/src/main/assets/programs/example-5-3-1-bbb.json`.
+
 ## 2026-05-15: Native Android primary and Web secondary
 
 - Status: accepted

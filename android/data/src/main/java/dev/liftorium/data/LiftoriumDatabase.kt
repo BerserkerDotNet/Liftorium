@@ -18,6 +18,14 @@ import dev.liftorium.data.run.ProgramRunDao
 import dev.liftorium.data.run.ProgramRunEntity
 import dev.liftorium.data.run.ProgramRunReferenceValueEntity
 import dev.liftorium.data.run.ScheduleOccurrenceEntity
+import dev.liftorium.data.workout.ActualSetEntity
+import dev.liftorium.data.workout.DeviceIdentityDao
+import dev.liftorium.data.workout.DeviceIdentityEntity
+import dev.liftorium.data.workout.LocalMutationEntity
+import dev.liftorium.data.workout.PrescriptionCalculationSnapshotEntity
+import dev.liftorium.data.workout.WorkoutExerciseLogEntity
+import dev.liftorium.data.workout.WorkoutLoggingDao
+import dev.liftorium.data.workout.WorkoutSessionEntity
 
 /**
  * Liftorium Room database. The `android-program-runner` workstream lands
@@ -52,11 +60,19 @@ import dev.liftorium.data.run.ScheduleOccurrenceEntity
         ProgramRunEntity::class,
         ScheduleOccurrenceEntity::class,
         ProgramRunReferenceValueEntity::class,
+        WorkoutSessionEntity::class,
+        WorkoutExerciseLogEntity::class,
+        ActualSetEntity::class,
+        PrescriptionCalculationSnapshotEntity::class,
+        LocalMutationEntity::class,
+        DeviceIdentityEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 public abstract class LiftoriumDatabase : RoomDatabase() {
     public abstract fun loadedProgramVersionDao(): LoadedProgramVersionDao
     public abstract fun programRunDao(): ProgramRunDao
+    public abstract fun workoutLoggingDao(): WorkoutLoggingDao
+    public abstract fun deviceIdentityDao(): DeviceIdentityDao
 }

@@ -18,7 +18,7 @@ private val UTC = ZoneOffset.UTC
 private fun prerequisites(
     programVersionId: ProgramVersionId = ProgramVersionId("p1@v1"),
     pinnedContentHash: String = "h".repeat(64),
-    requiredFirstWeekReferenceIds: Set<String> = setOf("tm-bench"),
+    requiredFirstWeekReferenceIds: Set<String> = setOf("orm-bench"),
     weekVariantGroups: Map<WeekVariantGroupKey, Set<String>> = emptyMap(),
     weekOrder: List<WeekSlot> = listOf(WeekSlot("b1", "w1")),
     sessionsByWeek: Map<String, List<PlannedSession>> = mapOf(
@@ -56,20 +56,20 @@ class StartProgramRunTest {
     @Test
     fun `returns MissingRuntimeReferences when first-week refs unsupplied`() = runTest {
         val repo = RecordingFakeRepository().apply {
-            storedPrerequisites = prerequisites(requiredFirstWeekReferenceIds = setOf("tm-bench", "tm-squat"))
+            storedPrerequisites = prerequisites(requiredFirstWeekReferenceIds = setOf("orm-bench", "orm-squat"))
         }
         val useCase = StartProgramRun(repo, fixedTimeSource(FIXED_INSTANT), sequencedIdGenerator("run-1"), UTC)
 
         val result = useCase(
             StartProgramRunCommand(
                 programVersionId = ProgramVersionId("p1@v1"),
-                runtimeReferenceValues = mapOf("tm-bench" to RuntimeReferenceValue(100.0, WeightUnit.Kg)),
+                runtimeReferenceValues = mapOf("orm-bench" to RuntimeReferenceValue(100.0, WeightUnit.Kg)),
                 chosenWeekVariants = emptyMap(),
             ),
         )
 
         assertIs<StartProgramRunResult.Failure.MissingRuntimeReferences>(result)
-        assertEquals(setOf("tm-squat"), result.referenceIds)
+        assertEquals(setOf("orm-squat"), result.referenceIds)
     }
 
     @Test
@@ -130,7 +130,7 @@ class StartProgramRunTest {
         val result = useCase(
             StartProgramRunCommand(
                 programVersionId = ProgramVersionId("p1@v1"),
-                runtimeReferenceValues = mapOf("tm-bench" to RuntimeReferenceValue(100.0, WeightUnit.Kg)),
+                runtimeReferenceValues = mapOf("orm-bench" to RuntimeReferenceValue(100.0, WeightUnit.Kg)),
                 chosenWeekVariants = emptyMap(),
             ),
         )

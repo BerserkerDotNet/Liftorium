@@ -153,4 +153,106 @@ class MigrationTest {
             context.deleteDatabase(dbName)
         }
     }
+
+    @Test
+    fun migrate2To3_addsWorkoutLoggingTablesAdditively() = runBlocking {
+        val dbName = "liftorium-migration-v3-test.db"
+
+        // Seed a v2 db with a program version + run + occurrence so the
+        // additive migration must coexist with existing rows and the v2
+        // → v3 path is verified to not touch pre-existing data.
+        helper.createDatabase(dbName, 2).use { v2Db ->
+            v2Db.execSQL(
+                "INSERT INTO loaded_program_version (" +
+                    "programVersionId, programId, versionLabel, displayName, " +
+                    "authorAttribution, contentHash, schemaVersion, validationStatus, " +
+                    "loadedAtEpochMillis, programDefaultsJson, " +
+                    "programStructureRoundingOverrideJson, importAuditJson, " +
+                    "validationIssuesJson) VALUES (" +
+                    "'p@v1', 'p', '1', 'Program', 'Author', 'hash-b', 3, 'activatable', " +
+                    "100, NULL, NULL, '{}', '[]')",
+            )
+            v2Db.execSQL(
+                "INSERT INTO program_run (" +
+                    "programRunId, programVersionId, pinnedContentHash, " +
+                    "startedAtEpochMillis, status, chosenWeekVariantsJson, " +
+                    "activeRunSlot, updatedAtEpochMillis) VALUES (" +
+                    "'run-v2', 'p@v1', 'hash-b', 777, 'active', '{}', 1, 777)",
+            )
+            v2Db.execSQL(
+                "INSERT INTO schedule_occurrence (" +
+                    "programRunId, occurrenceId, plannedEpochDay, " +
+                    "actualCompletionEpochDay, blockId, weekId, sessionId, " +
+                    "sessionIndex, state, updatedAtEpochMillis) VALUES (" +
+                    "'run-v2', 'occ-v2', 0, NULL, 'b1', 'w1', 's1', 1, 'planned', 0)",
+            )
+        }
+
+        val v3Db = helper.runMigrationsAndValidate(
+            dbName,
+            3,
+            true,
+            *LIFTORIUM_DATABASE_MIGRATIONS,
+        )
+
+        v3Db.query(
+            "SELECT programRunId, updatedAtEpochMillis FROM program_run WHERE programRunId = 'run-v2'",
+        ).use { cursor ->
+            assertTrue(cursor.moveToFirst(), "pre-existing program_run row preserved by v2→v3")
+            assertEquals("run-v2", cursor.getString(0))
+            assertEquals(777L, cursor.getLong(1))
+        }
+
+        val newTables = setOf(
+            "workout_session",
+            "workout_exercise_log",
+            "actual_set",
+            "prescription_calculation_snapshot",
+            "local_mutation",
+            "device_identity",
+        )
+        v3Db.query(
+            "SELECT name FROM sqlite_master WHERE type = 'table'",
+        ).use { cursor ->
+            val present = mutableSetOf<String>()
+            while (cursor.moveToNext()) present += cursor.getString(0)
+            for (table in newTables) {
+                assertTrue(table in present, "v2→v3 created table $table (present: $present)")
+            }
+        }
+
+        v3Db.query(
+            "SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'workout_session'",
+        ).use { cursor ->
+            val indexes = mutableListOf<String>()
+            while (cursor.moveToNext()) indexes += cursor.getString(0)
+            assertTrue(
+                indexes.any { it == "index_workout_session_activeWorkoutSlot" },
+                "unique activeWorkoutSlot index created (had: $indexes)",
+            )
+        }
+
+        v3Db.close()
+
+        // Re-open through the Room facade to confirm the live runtime
+        // also boots cleanly on v3 with the new DAOs.
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val live = androidx.room.Room.databaseBuilder(
+            context,
+            LiftoriumDatabase::class.java,
+            dbName,
+        )
+            .addMigrations(*LIFTORIUM_DATABASE_MIGRATIONS)
+            .allowMainThreadQueries()
+            .build()
+        try {
+            val activeWorkout = live.workoutLoggingDao().findActiveSession()
+            assertEquals(null, activeWorkout, "no active workout session after v3 migration of legacy v2 data")
+            val device = live.deviceIdentityDao().find()
+            assertEquals(null, device, "device_identity is empty until first DeviceIdProvider call")
+        } finally {
+            live.close()
+            context.deleteDatabase(dbName)
+        }
+    }
 }

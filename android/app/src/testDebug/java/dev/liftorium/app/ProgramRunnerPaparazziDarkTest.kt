@@ -15,6 +15,7 @@ import dev.liftorium.app.ui.program.ProgramDetailScreen
 import dev.liftorium.app.ui.program.ProgramLibraryScreen
 import dev.liftorium.app.ui.program.TodaySessionScreen
 import dev.liftorium.app.ui.program.WeekVariantPicker
+import dev.liftorium.app.ui.workout.ActiveWorkoutScreen
 import dev.liftorium.domain.common.ProgramVersionId
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.Rule
@@ -142,6 +143,15 @@ class ProgramRunnerPaparazziDarkTest {
         paparazzi.snapshot {
             themed {
                 LiftoriumNavHost(initial = SampleStateFactory.emptyLibrary())
+            }
+        }
+    }
+
+    @Test
+    fun activeWorkout_justStarted() {
+        paparazzi.snapshot {
+            themed {
+                ActiveWorkoutScreen(state = SampleStateFactory.activeWorkoutJustStarted())
             }
         }
     }

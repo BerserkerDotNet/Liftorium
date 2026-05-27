@@ -23,7 +23,7 @@ Do not carry unrelated workstream context into the session unless a dependency r
 | 4 | `android-program-runner` | Program resource loading into Room, program library, active run, version pinning, schedule entry | Android UI polish, Android workout logging |
 | 5 | `android-ui-polish` | Compose theme + design tokens, typography scale, spacing scale, status/empty-state components, app icon, density rules | All subsequent Android workstreams (workout logging, timers, stats, etc.) |
 | 6 | `android-workout-logging` | Offline active workout, tap-by-tap persistence, recovery | Max/progression, substitutions, timers, stats |
-| 7 | `android-training-max-progression` | Training maxes, percent work, rounding, progression | Workout prescriptions, stats caveats |
+| 7 | `android-one-rep-max-progression` | 1RMs, percent work, rounding, progression | Workout prescriptions, stats caveats |
 | 8 | `android-catalog-substitutions` | Exercise catalog approval, substitution flow, prescribed/performed history | Workout logging, stats |
 | 9 | `android-rest-timers` | Timer policy, permissions, foreground-service locked alerts | Workout runtime UX |
 | 10 | `android-stats-history` | History, PRs, e1RM, substitution stats, source drilldowns | Android acceptance, optional Web fixture data definitions |
@@ -40,7 +40,7 @@ Do not carry unrelated workstream context into the session unless a dependency r
 | `android-program-runner` | `android-program-runner` |
 | `android-ui-polish` | `android-ui-polish` |
 | `android-workout-logging` | `android-workout-logging` |
-| `training-max-progression` | `android-training-max-progression` |
+| `one-rep-max-progression` | `android-one-rep-max-progression` |
 | `catalog-substitutions` | `android-catalog-substitutions` |
 | `android-rest-timers` | `android-rest-timers` |
 | `stats-history` | `android-stats-history` |
@@ -55,7 +55,7 @@ Do not carry unrelated workstream context into the session unless a dependency r
 - `android-program-runner` owns Android `ProgramResourceLoader`: validate finalized JSON resources at runtime, load them transactionally into Room, preserve import audit/issues, enforce idempotency/hash conflicts, and create pinned program runs before workout logging starts.
 - `android-ui-polish` produces the canonical Compose theme, typography/spacing/color tokens, and shared UI components (status badges, empty states, etc.). All subsequent Android workstreams MUST consume those tokens rather than reaching for raw Material 3 defaults. Existing `android-program-runner` screens are retroactively reskinned through the new tokens, with Paparazzi diffs as evidence.
 - `android-workout-logging` must persist user-created workout state in Room with sync-ready metadata and expose integration seams for maxes, substitutions, timers, and stats.
-- `android-training-max-progression` must snapshot calculated prescriptions so history does not change when maxes change.
+- `android-one-rep-max-progression` must snapshot calculated prescriptions so history does not change when 1RMs change.
 - `android-catalog-substitutions` must preserve original and performed exercise IDs for history and stats.
 - `android-rest-timers` must not block workout logging when timer permissions are denied.
 - `android-stats-history` must derive stats from raw logs and define any non-authoritative history/stat snapshot fixtures that Web may render. Android export is still out of MVP.

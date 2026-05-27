@@ -30,7 +30,7 @@ private fun aPrereqs(versionId: ProgramVersionId = ProgramVersionId("p1@v1"), ha
     ProgramVersionPrerequisites(
         programVersionId = versionId,
         pinnedContentHash = hash,
-        requiredFirstWeekReferenceIds = setOf("tm-bench"),
+        requiredFirstWeekReferenceIds = setOf("orm-bench"),
         weekVariantGroups = emptyMap(),
         weekOrder = listOf(WeekSlot("b1", "w1")),
         sessionsByWeek = mapOf("w1" to listOf(PlannedSession("s1", 1))),
@@ -57,7 +57,7 @@ class RepeatProgramRunTest {
             repo, fixedTimeSource(FIXED_INSTANT), sequencedIdGenerator("run-2"), ZoneOffset.UTC,
         )
 
-        val result = useCase(ProgramRunId("old-run"), mapOf("tm-bench" to RuntimeReferenceValue(80.0, WeightUnit.Kg)), emptyMap())
+        val result = useCase(ProgramRunId("old-run"), mapOf("orm-bench" to RuntimeReferenceValue(80.0, WeightUnit.Kg)), emptyMap())
 
         assertIs<RepeatProgramRunResult.Failure.UnknownPreviousRun>(result)
     }
@@ -75,7 +75,7 @@ class RepeatProgramRunTest {
         val result = useCase(ProgramRunId("old-run"), emptyMap(), emptyMap())
 
         assertIs<RepeatProgramRunResult.Failure.MissingRuntimeReferences>(result)
-        assertEquals(setOf("tm-bench"), result.referenceIds)
+        assertEquals(setOf("orm-bench"), result.referenceIds)
     }
 
     @Test
@@ -110,7 +110,7 @@ class RepeatProgramRunTest {
 
         val result = useCase(
             ProgramRunId("old-run"),
-            mapOf("tm-bench" to RuntimeReferenceValue(82.5, WeightUnit.Kg)),
+            mapOf("orm-bench" to RuntimeReferenceValue(82.5, WeightUnit.Kg)),
             emptyMap(),
         )
 
@@ -135,7 +135,7 @@ class RepeatProgramRunTest {
 
         val result = useCase(
             ProgramRunId("old-run"),
-            mapOf("tm-bench" to RuntimeReferenceValue(82.5, WeightUnit.Kg)),
+            mapOf("orm-bench" to RuntimeReferenceValue(82.5, WeightUnit.Kg)),
             emptyMap(),
         )
 

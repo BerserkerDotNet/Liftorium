@@ -33,7 +33,7 @@ Wire Android features through explicit services/use cases:
 - `ProgramResourceLoader`
 - `ProgramRunService`
 - `WorkoutLoggingService`
-- `TrainingMaxService`
+- `OneRepMaxService`
 - `SubstitutionService`
 - `StatsService`
 - `RestTimerService`

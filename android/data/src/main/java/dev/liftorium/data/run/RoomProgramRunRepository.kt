@@ -151,7 +151,7 @@ public class RoomProgramRunRepository(
     public companion object {
         private const val FIRST_WEEK_INDEX = 1
         private const val LOG_TAG = "RoomProgramRunRepo"
-        private val RUNTIME_REQUIRED_REFERENCE_TYPES = setOf("training_max", "one_rep_max")
+        private val RUNTIME_REQUIRED_REFERENCE_TYPES = setOf("one_rep_max")
 
         /**
          * Stable JSON config for serialising `chosenWeekVariants`. The

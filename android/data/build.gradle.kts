@@ -53,7 +53,13 @@ dependencies {
     api(project(":domain"))
     api(project(":core"))
 
-    implementation(libs.androidx.room.runtime)
+    // `api` (not `implementation`): LiftoriumDatabase's supertype
+    // androidx.room.RoomDatabase leaks into the public API of `:data`
+    // (callers of LiftoriumDatabaseFactory.create() receive the class),
+    // so consumers need the Room runtime on their compile classpath.
+    // Production Room annotations (Entity/Dao/Database) still live ONLY
+    // in `:data:main` — enforced by the root `verifyRoomLocality` task.
+    api(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 

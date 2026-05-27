@@ -13,11 +13,11 @@ Liftorium MVP is local-first. There is no runtime cloud backend, account service
 ## Architectural principles
 
 1. **Local-first workout execution**: active workouts must not depend on network access.
-2. **Room is the Android source of truth**: active workout state, logs, substitutions, training maxes, and history are persisted in SQLite through Room.
+2. **Room is the Android source of truth**: active workout state, logs, substitutions, 1RMs, and history are persisted in SQLite through Room.
 3. **Immutable program versions**: starting a run pins one program version. Historical data never changes because a program is re-imported or edited.
 4. **Contract-first program resources**: app runtime consumes validated versioned JSON resources only.
 5. **No silent import guessing**: ambiguous or unsupported program constructs block activation unless explicitly classified as note-only.
-6. **Read-only Web MVP**: Web cannot mutate workout, program-run, substitution, timer, or training-max state.
+6. **Read-only Web MVP**: Web cannot mutate workout, program-run, substitution, timer, or 1RM state.
 7. **Verifiable implementation**: each module must have unit, integration, migration, or runtime tests tied to acceptance scenarios.
 
 ## System context
@@ -186,7 +186,7 @@ flowchart LR
     FeatureSettings[feature-settings] --> DomainPrefs[domain-preferences]
 
     DomainWorkout --> DomainProgram
-    DomainWorkout --> DomainTraining[domain-training-max]
+    DomainWorkout --> DomainTraining[domain-one-rep-max]
     DomainWorkout --> DomainSub[domain-substitution]
     DomainStats --> DomainWorkout
     DomainStats --> DomainSub
@@ -248,7 +248,7 @@ Responsibilities:
 - Apply substitutions and undo according to contract.
 - Recover open sessions after process death.
 
-#### TrainingMaxService
+#### OneRepMaxService
 
 Responsibilities:
 
@@ -318,7 +318,7 @@ erDiagram
     Exercise ||--o{ ActualSet : performed_as
     Exercise ||--o{ SubstitutionEvent : original_or_performed
 
-    ProgramRun ||--o{ TrainingMaxEntry : uses
+    ProgramRun ||--o{ OneRepMaxEntry : uses
     ActualSet ||--o{ PrescriptionCalculationSnapshot : snapshots
     WorkoutSession ||--o{ SubstitutionEvent : applies
 ```
@@ -330,7 +330,7 @@ erDiagram
 - Planned schedule occurrences are not the same as actual workout sessions.
 - Actual sets can link to prescribed sets or exist as extra sets.
 - Substitutions are first-class records; do not overwrite prescribed exercise IDs.
-- Training max entries are effective-dated.
+- 1RM entries are effective-dated.
 - Calculation snapshots preserve the values used at workout time.
 - Stats cache is disposable; raw logs are authoritative.
 
@@ -389,7 +389,7 @@ These fields are the minimum architecture-level invariants. Final schema fields 
 - Display load.
 - Caveats.
 
-#### TrainingMaxEntry
+#### OneRepMaxEntry
 
 - Stable ID.
 - Program run ID.
@@ -460,7 +460,7 @@ The sync-metadata field set rolls out per entity by the workstream that introduc
 | `schedule_occurrence` | `android-program-runner` | ✓ (`occurrenceId`) | — (carried by parent `program_run.startedAtEpochMillis`) | ✓ (v2) | — | — | — | — |
 | `program_run_reference_value` | `android-program-runner` | ✓ (composite `programRunId + referenceId`) | `suppliedAtEpochMillis` | — | — | — | — | — |
 | `workout_session` / `workout_exercise_log` / `actual_set` / `prescription_calculation_snapshot` / `local_mutation` | `android-workout-logging` | planned | planned | planned | planned | planned | planned | planned |
-| `training_max_entry` | `android-training-max-progression` | planned | planned | planned | planned | planned | planned | planned |
+| `one_rep_max_entry` | `android-one-rep-max-progression` | planned | planned | planned | planned | planned | planned | planned |
 | `substitution_event` | `android-catalog-substitutions` | planned | planned | planned | planned | planned | planned | planned |
 | `stats_cache` | `android-stats-history` | planned | planned | planned | n/a (cache; see Stats architecture) | planned | planned | n/a (derived) |
 
@@ -616,7 +616,7 @@ Each user-visible workout mutation must be a transaction:
 - Add/update note.
 - Log RPE/RIR.
 - Apply/undo substitution.
-- Update training max/reference.
+- Update 1RM/reference.
 - Complete or abandon workout.
 - Reschedule session.
 - Repeat workout/week.
@@ -649,11 +649,11 @@ Planned schedule and actual history are separate:
 - Repeating a program creates a new program run.
 - Rescheduling changes planned occurrences without rewriting completed history.
 
-## Training max and progression architecture
+## 1RM and progression architecture
 
 ```mermaid
 flowchart LR
-    Max[TrainingMaxEntry\neffective dated] --> Calc[Prescription calculator]
+    Max[OneRepMaxEntry\neffective dated] --> Calc[Prescription calculator]
     Rule[ProgressionRule] --> Calc
     Prescription[SetPrescription] --> Calc
     Calc --> Snapshot[PrescriptionCalculationSnapshot]
@@ -755,7 +755,7 @@ flowchart TB
 Rules:
 
 - No workout logging.
-- No training max edits.
+- No 1RM edits.
 - No substitution edits.
 - No program-run mutations.
 - No offline workout persistence.
@@ -775,7 +775,7 @@ These contracts are part of the architecture. Implementation work must update th
 | --- | --- | --- |
 | Exact sets/reps/load | Structured | Executable prescription. |
 | Rep ranges | Structured | Actual reps logged within/outside range. |
-| Percent/training-max loads | Structured | Requires reference type, lift/exercise, value, unit, and rounding rule. |
+| Percent/1RM loads | Structured | Requires reference type, lift/exercise, value, unit, and rounding rule. |
 | RPE/RIR targets | Structured | Supports target, range, cap, actual value, and target-met status. |
 | Prescribed warmups | Structured | Excluded from PR/e1RM by default. |
 | User-added warmups | Structured | Excluded from PR/e1RM by default. |
@@ -917,12 +917,12 @@ Sync-relevant entities:
 - `PrescriptionTarget`
 - `ProgramRun`
 - `ScheduleOccurrence` (planned session occurrence; implementation entity is `ScheduleOccurrenceEntity`)
-- `ProgramRunReferenceValue` (run-scoped runtime injection of training-max / 1RM references)
+- `ProgramRunReferenceValue` (run-scoped runtime injection of 1RM references)
 - `WorkoutSession`
 - `WorkoutExerciseLog`
 - `ActualSet`
 - `SubstitutionEvent`
-- `TrainingMaxEntry`
+- `OneRepMaxEntry`
 - `PrescriptionCalculationSnapshot`
 - `UserPreference`
 - `LocalMutation`
@@ -946,7 +946,7 @@ Clock rules:
 Tombstone rules:
 
 - User-visible undo is session-only.
-- Durable internal edit audit is retained for workout logs, substitutions, training max changes, and entities needed for future restore/sync.
+- Durable internal edit audit is retained for workout logs, substitutions, 1RM changes, and entities needed for future restore/sync.
 
 ### JSON resource versioning contract
 
@@ -975,7 +975,7 @@ From the first schema:
 
 - Export Room schema snapshots.
 - Provide migration tests.
-- Preserve raw workout logs, program version links, calculation snapshots, substitutions, training max history, tombstones, and sync-ready metadata.
+- Preserve raw workout logs, program version links, calculation snapshots, substitutions, 1RM history, tombstones, and sync-ready metadata.
 - Derived stats may be rebuilt or invalidated during migration, but raw logs must not be lost.
 
 Current status: `LiftoriumDatabase` is at version 2. Both `1.json` and `2.json` are committed under `android/data/schemas/dev.liftorium.data.LiftoriumDatabase/`. `Migration1To2` is additive (audit columns + composite occurrence index + `contentHash` unique index) and covered by `MigrationTest`. Future migrations append a `MigrationN_to_M` to `LIFTORIUM_DATABASE_MIGRATIONS` and ship an `N.json` snapshot; destructive `fallbackToDestructiveMigration` is not permitted.
@@ -988,7 +988,7 @@ Rules:
 
 - Active workout session state is stored in Room.
 - Every user-visible logging action writes through a Room transaction.
-- Logging actions include complete set, edit set, skip set/exercise, add set, note update, RPE/RIR update, substitution, undo, and training max/reference update.
+- Logging actions include complete set, edit set, skip set/exercise, add set, note update, RPE/RIR update, substitution, undo, and 1RM/reference update.
 - The logging action list is exhaustive for MVP. Adding a user-visible mutation requires updating this contract and adding a transactional persistence test.
 - MVP user-visible mutations also include start workout, complete workout, abandon workout, reschedule session, repeat workout/week, pause/abandon/complete program run, and start/stop/adjust rest timer state.
 - Recovery reads open sessions from Room.
@@ -1020,7 +1020,7 @@ Web:
 Web MVP must enforce read-only scope mechanically:
 
 - The Web API client exposes read operations only.
-- Web tests fail if non-GET mutation methods are introduced for workout sessions, substitutions, training maxes, program runs, or timer state.
+- Web tests fail if non-GET mutation methods are introduced for workout sessions, substitutions, 1RMs, program runs, or timer state.
 - Components may import read-only hooks only.
 - Web copy must not claim offline workout logging or locked/background timer support.
 

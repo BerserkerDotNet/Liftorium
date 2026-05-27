@@ -127,7 +127,7 @@ P0 is the minimum complete product promise for early users:
 - Optional account placeholder only; no account is required for first beta use.
 - Program-provided substitutions and recent/favorite substitutions.
 - Flexible prescription display for finalized app-ready programs.
-- Training max / 1RM inputs where required by a program.
+- 1RM inputs where required by a program.
 - Exercise history.
 - Personal records.
 - Estimated 1RM trend for supported strength lifts.
@@ -339,17 +339,17 @@ The app must preserve original prescription text when useful for user understand
 
 The developer-time import workflow should resolve unsupported or ambiguous structures before release, either by converting them into supported app data or preserving them as reviewable program notes.
 
-## Training maxes, 1RM, and measurement options
+## 1RM and measurement options
 
-Many structured programs use true 1RM, estimated 1RM, training max, recent best, body weight, or a program-specific test value.
+Many structured programs use true 1RM, estimated 1RM, recent best, body weight, or a program-specific test value. Liftorium stores user-supplied values as 1RM; programs that traditionally used a separate "training max" must encode that adjustment into their target percentages.
 
 Requirements:
 
-- User can enter relevant maxes or training maxes when required by a program.
+- User can enter relevant 1RM values when required by a program.
 - Percentage-based prescriptions should identify what reference value they use.
 - User can update maxes over time.
-- Updating a training max should affect future prescriptions but should not rewrite historical completed workouts.
-- Program-run-specific training maxes can differ from all-time personal records.
+- Updating a 1RM should affect future prescriptions but should not rewrite historical completed workouts.
+- Program-run-specific 1RM overrides can differ from all-time personal records.
 - User can follow either/or measurement instructions when a program offers alternatives.
 - App does not force the user to complete both sides of a mutually exclusive prescription.
 - Workout history records the selected option and the reference value used for calculated targets.
@@ -604,7 +604,7 @@ The product should define clear user-facing behavior for:
 - Import failure.
 - Unsupported program construct.
 - Unknown exercise.
-- Missing 1RM/training max.
+- Missing 1RM.
 - Ambiguous prescription.
 - Timer background limitations.
 - Corrupted or incomplete imported program.
@@ -625,7 +625,7 @@ These are product-level acceptance scenarios for later design and engineering pl
 - User views exercise history, personal records, estimated 1RM trend, and substitution history.
 - Developer/operator runs the spreadsheet-first Copilot skill and receives a finalized app-ready program resource plus summary/report.
 - Developer/operator can review the imported program summary, chat with AI to correct issues, and rerun or finalize the resource before it is released into the app.
-- User updates a training max and future calculated prescriptions change while historical workouts remain unchanged.
+- User updates a 1RM and future calculated prescriptions change while historical workouts remain unchanged.
 - User reschedules a missed workout and actual completion date remains distinct from planned program day.
 - When sync is introduced later, user completes a workout offline, reconnects, and history syncs without duplicates.
 

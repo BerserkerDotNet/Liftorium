@@ -41,7 +41,7 @@ Web must not imply live Android local data access.
 
 ## Read-only enforcement
 
-For changes touching data clients, persistence/offline behavior, workout sessions, substitutions, training maxes, program runs, timer state, or capability copy, use `web-readonly-guard`.
+For changes touching data clients, persistence/offline behavior, workout sessions, substitutions, 1RMs, program runs, timer state, or capability copy, use `web-readonly-guard`.
 
 ## Verification
 

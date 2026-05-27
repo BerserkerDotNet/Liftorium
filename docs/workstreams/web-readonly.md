@@ -27,7 +27,7 @@
 
 ## Contracts not to break
 
-- Web cannot mutate workout sessions, substitutions, training maxes, program runs, timer state, or source program resources.
+- Web cannot mutate workout sessions, substitutions, 1RMs, program runs, timer state, or source program resources.
 - Web cannot imply live Android Room/local data access.
 - Web cannot claim offline workout logging, locked-phone timer behavior, or sync continuity.
 - Protected-domain writes via API clients, mutation hooks, local storage, IndexedDB, or service workers are out of MVP.

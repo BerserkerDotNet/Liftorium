@@ -4,14 +4,14 @@
     "programId": "blocked-missing-first-week-max",
     "programVersionId": "blocked-missing-first-week-max-v1",
     "versionLabel": "Missing first-week max v1",
-    "contentHash": "8ac195fd2aa4fd1b0f415dafb1c0051b1496dfb5492791f2f5d0fde03395e997"
+    "contentHash": "d62690004d9ba90dfab02429784ec41e4e17955d9234b3810dbbdfc9ad626a38"
   },
   "validationStatus": "blocked",
   "validationIssues": [
     {
       "severity": "critical",
       "code": "reference.missing_first_week",
-      "message": "Training max required for week 1 has not been supplied."
+      "message": "1RM required for week 1 has not been supplied."
     }
   ],
   "importAudit": {
@@ -31,8 +31,8 @@
   ],
   "requiredReferences": [
     {
-      "id": "tm-squat",
-      "referenceType": "training_max",
+      "id": "orm-squat",
+      "referenceType": "one_rep_max",
       "exerciseId": "back-squat",
       "firstRunnableWeekIndex": 1,
       "supplied": false
@@ -71,7 +71,7 @@
                               {
                                 "kind": "percent",
                                 "percent": 70,
-                                "referenceId": "tm-squat",
+                                "referenceId": "orm-squat",
                                 "reps": 5
                               }
                             ]

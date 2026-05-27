@@ -1,9 +1,17 @@
 package dev.liftorium.app.ui
 
-import dev.liftorium.domain.run.ProgramRunId
+import dev.liftorium.app.ui.workout.ActiveWorkoutExerciseUi
+import dev.liftorium.app.ui.workout.ActiveWorkoutSetUi
+import dev.liftorium.app.ui.workout.ActiveWorkoutUiState
 import dev.liftorium.domain.common.ProgramVersionId
 import dev.liftorium.domain.common.WeightUnit
+import dev.liftorium.domain.run.ProgramRunId
 import dev.liftorium.domain.run.WeekVariantGroupKey
+import dev.liftorium.domain.workout.ActualSetId
+import dev.liftorium.domain.workout.SetRole
+import dev.liftorium.domain.workout.SetState
+import dev.liftorium.domain.workout.WorkoutSessionId
+import dev.liftorium.domain.workout.WorkoutSessionStatus
 import kotlinx.collections.immutable.persistentListOf
 
 /**
@@ -69,10 +77,10 @@ public object SampleStateFactory {
             ),
         ),
         pendingReferences = persistentListOf(
-            PendingReferenceRow("tm-squat", "Training max · Squat", "training_max", WeightUnit.Kg),
-            PendingReferenceRow("tm-bench", "Training max · Bench", "training_max", WeightUnit.Kg),
-            PendingReferenceRow("tm-deadlift", "Training max · Deadlift", "training_max", WeightUnit.Kg),
-            PendingReferenceRow("tm-press", "Training max · OHP", "training_max", WeightUnit.Kg),
+            PendingReferenceRow("orm-squat", "1RM · Squat", "one_rep_max", WeightUnit.Kg),
+            PendingReferenceRow("orm-bench", "1RM · Bench", "one_rep_max", WeightUnit.Kg),
+            PendingReferenceRow("orm-deadlift", "1RM · Deadlift", "one_rep_max", WeightUnit.Kg),
+            PendingReferenceRow("orm-press", "1RM · OHP", "one_rep_max", WeightUnit.Kg),
         ),
         variantGroups = persistentListOf(
             VariantGroupUi(
@@ -107,6 +115,7 @@ public object SampleStateFactory {
 
     private fun bbbToday() = TodaySessionUi(
         programRunId = ProgramRunId("run-1"),
+        plannedOccurrenceId = "occ-bbb-1",
         programDisplayName = "5/3/1 BBB",
         sessionTitle = "Week 1 · Squat day",
         plannedEpochDay = 0L,
@@ -117,16 +126,16 @@ public object SampleStateFactory {
                 role = "main",
                 setLines = persistentListOf(
                     "Warm-up · 5 × bar",
-                    "Set 1 · 5 reps · 65% TM",
-                    "Set 2 · 5 reps · 75% TM",
-                    "Set 3 · 5+ reps · 85% TM",
+                    "Set 1 · 5 reps · 65% 1RM",
+                    "Set 2 · 5 reps · 75% 1RM",
+                    "Set 3 · 5+ reps · 85% 1RM",
                 ),
             ),
             TodayItemUi(
                 itemId = "bbb-squat",
                 exerciseName = "Squat (BBB)",
                 role = "accessory",
-                setLines = persistentListOf("5 × 10 · 50% TM"),
+                setLines = persistentListOf("5 × 10 · 50% 1RM"),
             ),
             TodayItemUi(
                 itemId = "row",
@@ -139,6 +148,7 @@ public object SampleStateFactory {
 
     private fun slToday() = TodaySessionUi(
         programRunId = ProgramRunId("run-2"),
+        plannedOccurrenceId = "occ-sl-1",
         programDisplayName = "StrongLifts 5x5",
         sessionTitle = "Week 1 · Workout A",
         plannedEpochDay = 0L,
@@ -148,6 +158,81 @@ public object SampleStateFactory {
             TodayItemUi("row", "Barbell row", "main", persistentListOf("5 × 5")),
         ),
     )
+
+    public fun activeWorkoutJustStarted(): ActiveWorkoutUiState = ActiveWorkoutUiState(
+        workoutSessionId = WorkoutSessionId("session-1"),
+        programRunId = ProgramRunId("run-1"),
+        plannedOccurrenceId = "occ-bbb-1",
+        pinnedProgramVersionId = "5-3-1-bbb@v1",
+        status = WorkoutSessionStatus.InProgress,
+        startedAtEpochMillis = 1_700_000_000_000L,
+        lastSavedMutationId = "mut-start",
+        title = "5/3/1 BBB",
+        subtitle = "Cycle 1 · Week 1 · Squat day",
+        exercises = persistentListOf(
+            ActiveWorkoutExerciseUi(
+                workoutExerciseLogId = "log-squat",
+                displayOrder = 0,
+                displayName = "Squat",
+                isCompleted = false,
+                isSkipped = false,
+                sets = persistentListOf(
+                    pendingWarmup("w1-1", 0, "Warm-up 1", "Bar · 5 reps"),
+                    pendingWarmup("w1-2", 1, "Warm-up 2", "60 kg · 5 reps"),
+                    pendingWorking("s1-1", 2, "Set 1", "100 kg · 5 reps · 65% 1RM"),
+                    pendingWorking("s1-2", 3, "Set 2", "115 kg · 5 reps · 75% 1RM"),
+                    pendingWorking("s1-3", 4, "Set 3", "130 kg · 5+ reps · 85% 1RM"),
+                ),
+            ),
+            ActiveWorkoutExerciseUi(
+                workoutExerciseLogId = "log-bbb",
+                displayOrder = 1,
+                displayName = "Squat (BBB)",
+                isCompleted = false,
+                isSkipped = false,
+                sets = persistentListOf(
+                    pendingWorking("s2-1", 0, "Set 1", "75 kg · 10 reps · 50% 1RM"),
+                    pendingWorking("s2-2", 1, "Set 2", "75 kg · 10 reps · 50% 1RM"),
+                    pendingWorking("s2-3", 2, "Set 3", "75 kg · 10 reps · 50% 1RM"),
+                ),
+            ),
+            ActiveWorkoutExerciseUi(
+                workoutExerciseLogId = "log-row",
+                displayOrder = 2,
+                displayName = "DB row",
+                isCompleted = false,
+                isSkipped = false,
+                sets = persistentListOf(
+                    pendingWorking("s3-1", 0, "Set 1", "10 reps · RPE 7"),
+                    pendingWorking("s3-2", 1, "Set 2", "10 reps · RPE 7"),
+                ),
+            ),
+        ),
+    )
+
+    private fun pendingWarmup(id: String, sequence: Int, label: String, summary: String) =
+        ActiveWorkoutSetUi(
+            actualSetId = ActualSetId(id),
+            sequence = sequence,
+            role = SetRole.Warmup,
+            state = SetState.Pending,
+            label = label,
+            targetSummary = summary,
+            actualSummary = null,
+            perSide = false,
+        )
+
+    private fun pendingWorking(id: String, sequence: Int, label: String, summary: String) =
+        ActiveWorkoutSetUi(
+            actualSetId = ActualSetId(id),
+            sequence = sequence,
+            role = SetRole.Working,
+            state = SetState.Pending,
+            label = label,
+            targetSummary = summary,
+            actualSummary = null,
+            perSide = false,
+        )
 }
 
 /**

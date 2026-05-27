@@ -2,7 +2,6 @@ package dev.liftorium.domain.run
 
 import dev.liftorium.core.IdGenerator
 import dev.liftorium.core.TimeSource
-import java.time.LocalDate
 import java.time.ZoneId
 
 /**
@@ -51,7 +50,7 @@ public class StartProgramRun(
 
         val nowInstant = timeSource.now()
         val nowMillis = nowInstant.toEpochMilli()
-        val startEpochDay = LocalDate.ofInstant(nowInstant, zoneId).toEpochDay()
+        val startEpochDay = nowInstant.atZone(zoneId).toLocalDate().toEpochDay()
         val runId = ProgramRunId(idGenerator.newId())
 
         val run = ProgramRun(

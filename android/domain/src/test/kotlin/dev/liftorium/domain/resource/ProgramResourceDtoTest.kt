@@ -126,7 +126,7 @@ class ProgramResourceDtoTest {
     fun `schemaVersion 3 round-trip preserves single percent target`() {
         val target = ProgramResourceJson.encodeToJsonElement(
             PrescriptionTarget.serializer(),
-            PrescriptionTarget.Percent(referenceId = "tm-squat", percent = 75.0, reps = 5),
+            PrescriptionTarget.Percent(referenceId = "orm-squat", percent = 75.0, reps = 5),
         )
         val decoded = ProgramResourceJson.decodeFromJsonElement(PrescriptionTarget.serializer(), target)
 
@@ -145,7 +145,7 @@ class ProgramResourceDtoTest {
         val target = ProgramResourceJson.encodeToJsonElement(
             PrescriptionTarget.serializer(),
             PrescriptionTarget.Percent(
-                referenceId = "tm-bench",
+                referenceId = "orm-bench",
                 percentMin = 70.0,
                 percentMax = 75.0,
                 reps = 8,
@@ -164,16 +164,16 @@ class ProgramResourceDtoTest {
     @Test
     fun `isRange is false when only single percent is set`() {
         val singlePercent = PrescriptionTarget.Percent(
-            referenceId = "tm-bench",
+            referenceId = "orm-bench",
             percent = 70.0,
             reps = 8,
         )
         assertFalse(singlePercent.isRange, "isRange should be false for single percent")
 
-        val onlyMin = PrescriptionTarget.Percent(referenceId = "tm-bench", percentMin = 70.0)
+        val onlyMin = PrescriptionTarget.Percent(referenceId = "orm-bench", percentMin = 70.0)
         assertFalse(onlyMin.isRange, "isRange should be false when only percentMin is set")
 
-        val onlyMax = PrescriptionTarget.Percent(referenceId = "tm-bench", percentMax = 75.0)
+        val onlyMax = PrescriptionTarget.Percent(referenceId = "orm-bench", percentMax = 75.0)
         assertFalse(onlyMax.isRange, "isRange should be false when only percentMax is set")
     }
 
@@ -222,7 +222,7 @@ class ProgramResourceDtoTest {
             order = 1,
             setKind = SetKind.Working,
             targets = listOf(
-                PrescriptionTarget.Percent(referenceId = "tm-squat", percent = 80.0, reps = 5),
+                PrescriptionTarget.Percent(referenceId = "orm-squat", percent = 80.0, reps = 5),
                 PrescriptionTarget.Rpe(target = 8.0),
             ),
         )

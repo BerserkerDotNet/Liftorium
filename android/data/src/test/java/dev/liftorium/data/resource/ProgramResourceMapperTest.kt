@@ -57,7 +57,7 @@ class ProgramResourceMapperTest {
                 PrescriptionTarget.ExactLoadReps(loadValue = 100.0, loadUnit = WeightUnit.Kg, reps = 5),
                 PrescriptionTarget.RepRange(repMin = 5, repMax = 8),
                 PrescriptionTarget.Percent(
-                    referenceId = "tm-bench",
+                    referenceId = "orm-bench",
                     percent = 70.0,
                     reps = 5,
                     amrap = true,
@@ -81,7 +81,7 @@ class ProgramResourceMapperTest {
         assertEquals(5, range.repMin)
         assertEquals(8, range.repMax)
         val percent = bundle.targets.first { it.kind == "percent" }
-        assertEquals("tm-bench", percent.referenceId)
+        assertEquals("orm-bench", percent.referenceId)
         assertEquals(70.0, percent.percent)
         assertEquals(true, percent.amrap)
         assertEquals("kg", percent.roundingUnit)
@@ -120,7 +120,7 @@ class ProgramResourceMapperTest {
             ruleParameters = null,
             percentRoundingUnit = null,
             targets = listOf(
-                PrescriptionTarget.Percent(referenceId = "tm-bench", percent = 70.0),
+                PrescriptionTarget.Percent(referenceId = "orm-bench", percent = 70.0),
             ),
         )
 
@@ -180,8 +180,8 @@ class ProgramResourceMapperTest {
         ),
         requiredReferences = listOf(
             RequiredReference(
-                id = "tm-bench",
-                referenceType = ReferenceType.TrainingMax,
+                id = "orm-bench",
+                referenceType = ReferenceType.OneRepMax,
                 exerciseId = "bench",
                 firstRunnableWeekIndex = 1,
                 supplied = false,

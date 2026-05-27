@@ -69,8 +69,199 @@ internal object Migration1To2 : Migration(1, 2) {
 }
 
 /**
+ * Room migration `v2 → v3`. The v3 schema adds the entire
+ * `android-workout-logging` family of tables:
+ *
+ *  * `workout_session` — one row per workout attempt; partial-unique
+ *    `activeWorkoutSlot` enforces the one-in-progress invariant.
+ *  * `workout_exercise_log` — per-exercise child of a session.
+ *  * `actual_set` — per-set grandchild of a session.
+ *  * `prescription_calculation_snapshot` — pinned calculation inputs
+ *    for one actual_set row.
+ *  * `local_mutation` — durable audit log of every user-visible
+ *    mutation. Carries the full `SyncMetadata` columns under the
+ *    `audit_` prefix to avoid collision with the mutation's own
+ *    `clientMutationId` primary key and `createdAtEpochMillis`
+ *    columns.
+ *  * `device_identity` — single-row table seeding the per-install
+ *    `DeviceId` UUID (see ADR 2026-05-25).
+ *
+ * The migration is purely additive (CREATE TABLE + CREATE INDEX);
+ * no existing v2 data is touched.
+ */
+@Suppress("LongMethod")
+internal object Migration2To3 : Migration(2, 3) {
+
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `workout_session` (
+                `workoutSessionId` TEXT NOT NULL,
+                `programRunId` TEXT NOT NULL,
+                `plannedOccurrenceId` TEXT NOT NULL,
+                `pinnedProgramVersionId` TEXT NOT NULL,
+                `status` TEXT NOT NULL,
+                `startedAtEpochMillis` INTEGER NOT NULL,
+                `eventZoneId` TEXT NOT NULL,
+                `localDateEpochDay` INTEGER NOT NULL,
+                `completedAtEpochMillis` INTEGER,
+                `abandonedAtEpochMillis` INTEGER,
+                `lastSavedMutationId` TEXT NOT NULL,
+                `activeWorkoutSlot` INTEGER,
+                `createdAtEpochMillis` INTEGER NOT NULL,
+                `updatedAtEpochMillis` INTEGER NOT NULL,
+                `deletedAtEpochMillis` INTEGER,
+                `deviceId` TEXT NOT NULL,
+                `localRevision` INTEGER NOT NULL,
+                `clientMutationId` TEXT NOT NULL,
+                PRIMARY KEY(`workoutSessionId`),
+                FOREIGN KEY(`programRunId`) REFERENCES `program_run`(`programRunId`)
+                    ON UPDATE NO ACTION ON DELETE CASCADE
+            )
+            """.trimIndent(),
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_workout_session_programRunId` ON `workout_session` (`programRunId`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_workout_session_status` ON `workout_session` (`status`)")
+        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_workout_session_activeWorkoutSlot` ON `workout_session` (`activeWorkoutSlot`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_workout_session_startedAtEpochMillis` ON `workout_session` (`startedAtEpochMillis`)")
+
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `workout_exercise_log` (
+                `workoutExerciseLogId` TEXT NOT NULL,
+                `workoutSessionId` TEXT NOT NULL,
+                `prescriptionItemId` TEXT NOT NULL,
+                `exerciseGroupId` TEXT NOT NULL,
+                `displayOrder` INTEGER NOT NULL,
+                `prescribedExerciseId` TEXT NOT NULL,
+                `performedExerciseId` TEXT NOT NULL,
+                `notes` TEXT,
+                `isCompleted` INTEGER NOT NULL,
+                `isSkipped` INTEGER NOT NULL,
+                `createdAtEpochMillis` INTEGER NOT NULL,
+                `updatedAtEpochMillis` INTEGER NOT NULL,
+                `deletedAtEpochMillis` INTEGER,
+                `deviceId` TEXT NOT NULL,
+                `localRevision` INTEGER NOT NULL,
+                `clientMutationId` TEXT NOT NULL,
+                PRIMARY KEY(`workoutExerciseLogId`),
+                FOREIGN KEY(`workoutSessionId`) REFERENCES `workout_session`(`workoutSessionId`)
+                    ON UPDATE NO ACTION ON DELETE CASCADE
+            )
+            """.trimIndent(),
+        )
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_workout_exercise_log_workoutSessionId_displayOrder` " +
+                "ON `workout_exercise_log` (`workoutSessionId`, `displayOrder`)",
+        )
+
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `actual_set` (
+                `actualSetId` TEXT NOT NULL,
+                `workoutExerciseLogId` TEXT NOT NULL,
+                `prescribedSetId` TEXT,
+                `role` TEXT NOT NULL,
+                `state` TEXT NOT NULL,
+                `sequence` INTEGER NOT NULL,
+                `performedExerciseId` TEXT NOT NULL,
+                `perSide` INTEGER NOT NULL,
+                `actualLoad` REAL,
+                `actualLoadUnit` TEXT,
+                `actualReps` INTEGER,
+                `actualRpe` REAL,
+                `actualRir` INTEGER,
+                `notes` TEXT,
+                `calculationSnapshotId` TEXT,
+                `sourceSubstitutionEventId` TEXT,
+                `createdAtEpochMillis` INTEGER NOT NULL,
+                `updatedAtEpochMillis` INTEGER NOT NULL,
+                `deletedAtEpochMillis` INTEGER,
+                `deviceId` TEXT NOT NULL,
+                `localRevision` INTEGER NOT NULL,
+                `clientMutationId` TEXT NOT NULL,
+                PRIMARY KEY(`actualSetId`),
+                FOREIGN KEY(`workoutExerciseLogId`) REFERENCES `workout_exercise_log`(`workoutExerciseLogId`)
+                    ON UPDATE NO ACTION ON DELETE CASCADE
+            )
+            """.trimIndent(),
+        )
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_actual_set_workoutExerciseLogId_sequence` " +
+                "ON `actual_set` (`workoutExerciseLogId`, `sequence`)",
+        )
+
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `prescription_calculation_snapshot` (
+                `snapshotId` TEXT NOT NULL,
+                `actualSetId` TEXT NOT NULL,
+                `referenceType` TEXT,
+                `referenceExerciseId` TEXT,
+                `referenceValue` REAL,
+                `referenceUnit` TEXT,
+                `percent` REAL,
+                `roundingRule` TEXT,
+                `calculatedRawLoad` REAL,
+                `displayLoad` REAL,
+                `displayLoadUnit` TEXT,
+                `targetReps` INTEGER,
+                `targetRpe` REAL,
+                `targetRir` INTEGER,
+                `caveatsJson` TEXT NOT NULL,
+                PRIMARY KEY(`snapshotId`),
+                FOREIGN KEY(`actualSetId`) REFERENCES `actual_set`(`actualSetId`)
+                    ON UPDATE NO ACTION ON DELETE CASCADE
+            )
+            """.trimIndent(),
+        )
+        db.execSQL(
+            "CREATE UNIQUE INDEX IF NOT EXISTS `index_prescription_calculation_snapshot_actualSetId` " +
+                "ON `prescription_calculation_snapshot` (`actualSetId`)",
+        )
+
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `local_mutation` (
+                `clientMutationId` TEXT NOT NULL,
+                `type` TEXT NOT NULL,
+                `entityType` TEXT NOT NULL,
+                `entityId` TEXT NOT NULL,
+                `createdAtEpochMillis` INTEGER NOT NULL,
+                `eventZoneId` TEXT NOT NULL,
+                `localDateEpochDay` INTEGER NOT NULL,
+                `audit_createdAtEpochMillis` INTEGER NOT NULL,
+                `audit_updatedAtEpochMillis` INTEGER NOT NULL,
+                `audit_deletedAtEpochMillis` INTEGER,
+                `audit_deviceId` TEXT NOT NULL,
+                `audit_localRevision` INTEGER NOT NULL,
+                `audit_clientMutationId` TEXT NOT NULL,
+                PRIMARY KEY(`clientMutationId`)
+            )
+            """.trimIndent(),
+        )
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS " +
+                "`index_local_mutation_entityType_entityId_createdAtEpochMillis` " +
+                "ON `local_mutation` (`entityType`, `entityId`, `createdAtEpochMillis`)",
+        )
+
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `device_identity` (
+                `id` INTEGER NOT NULL,
+                `deviceId` TEXT NOT NULL,
+                `createdAtEpochMillis` INTEGER NOT NULL,
+                PRIMARY KEY(`id`)
+            )
+            """.trimIndent(),
+        )
+    }
+}
+
+/**
  * Ordered list of all production migrations to register against
  * Room's database builder. Tests against an in-memory builder do not
  * need migrations because Room recreates the v[N] schema from scratch.
  */
-public val LIFTORIUM_DATABASE_MIGRATIONS: Array<Migration> = arrayOf(Migration1To2)
+public val LIFTORIUM_DATABASE_MIGRATIONS: Array<Migration> = arrayOf(Migration1To2, Migration2To3)

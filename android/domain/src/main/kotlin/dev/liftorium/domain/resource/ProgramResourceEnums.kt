@@ -66,7 +66,6 @@ public enum class ExerciseEquipment {
 @KoverIgnore
 @Serializable
 public enum class ReferenceType {
-    @SerialName("training_max") TrainingMax,
     @SerialName("one_rep_max") OneRepMax,
     @SerialName("bodyweight") Bodyweight,
 }

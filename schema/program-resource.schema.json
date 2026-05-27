@@ -85,7 +85,7 @@
     "validationStatus": {
       "type": "string",
       "enum": ["activatable", "pending_runtime_references", "blocked", "rejected"],
-      "description": "Aggregate activation gate. 'activatable' means no critical issues remain and ProgramResourceLoader will accept this resource as-is. 'pending_runtime_references' means the resource is structurally complete at import time, and the only remaining criticals are first-week reference.missing_first_week entries for runtime-pending training_max / one_rep_max references that the loader injects from the user profile at activation. 'blocked' means critical issues remain that the operator must iterate on. 'rejected' means the resource cannot be retried without re-import and is never activatable."
+      "description": "Aggregate activation gate. 'activatable' means no critical issues remain and ProgramResourceLoader will accept this resource as-is. 'pending_runtime_references' means the resource is structurally complete at import time, and the only remaining criticals are first-week reference.missing_first_week entries for runtime-pending one_rep_max references that the loader injects from the user profile at activation. 'blocked' means critical issues remain that the operator must iterate on. 'rejected' means the resource cannot be retried without re-import and is never activatable."
     },
     "validationIssue": {
       "type": "object",
@@ -149,7 +149,7 @@
     },
     "roundingOverride": {
       "type": "object",
-      "description": "Optional rounding override. Precedence (lowest to highest): programDefaults → block → exercise → prescription target. program-resources only validates shape; android-program-runner/8 (program runner / training-max progression) enforce precedence at calculation time.",
+      "description": "Optional rounding override. Precedence (lowest to highest): programDefaults → block → exercise → prescription target. program-resources only validates shape; android-program-runner/8 (program runner / 1RM progression) enforce precedence at calculation time.",
       "additionalProperties": false,
       "properties": {
         "roundingIncrement": { "type": "number", "exclusiveMinimum": 0 },
@@ -201,11 +201,11 @@
         "id": { "type": "string", "minLength": 1 },
         "referenceType": {
           "type": "string",
-          "enum": ["training_max", "one_rep_max", "bodyweight"]
+          "enum": ["one_rep_max", "bodyweight"]
         },
         "exerciseId": {
           "type": "string",
-          "description": "Canonical exercise id when referenceType is training_max or one_rep_max."
+          "description": "Canonical exercise id when referenceType is one_rep_max."
         },
         "firstRunnableWeekIndex": {
           "type": "integer",
@@ -227,7 +227,7 @@
         {
           "if": {
             "properties": {
-              "referenceType": { "enum": ["training_max", "one_rep_max"] }
+              "referenceType": { "const": "one_rep_max" }
             },
             "required": ["referenceType"]
           },

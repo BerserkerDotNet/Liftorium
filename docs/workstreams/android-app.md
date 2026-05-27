@@ -6,7 +6,7 @@ This file is shared context for Android implementation sessions. It owns no SQL 
 
 - `android-program-runner.md`
 - `android-workout-logging.md`
-- `android-training-max-progression.md`
+- `android-one-rep-max-progression.md`
 - `android-catalog-substitutions.md`
 - `android-rest-timers.md`
 - `android-stats-history.md`
@@ -17,7 +17,7 @@ This file is shared context for Android implementation sessions. It owns no SQL 
 - The selected Android sub-workstream doc.
 - `docs/product.md`: relevant A1-A5 and A8-A9 acceptance/test matrix rows.
 - `docs/architecture.md`: Android layers, Room source-of-truth, timer, stats.
-- `docs/architecture.md`: durability, timer, stats, substitutions, training maxes, sync-readiness.
+- `docs/architecture.md`: durability, timer, stats, substitutions, 1RMs, sync-readiness.
 - `docs/workstreams/program-resources.md`
 
 ## Shared outputs
@@ -31,7 +31,7 @@ This file is shared context for Android implementation sessions. It owns no SQL 
 - Room is the source of truth for active workout state and logs.
 - Every user-visible workout mutation is transactional.
 - Program runs pin immutable program versions.
-- Training max updates affect future prescriptions only.
+- 1RM updates affect future prescriptions only.
 - Raw logs are authoritative; derived stats caches are rebuildable.
 - Notification denial blocks timer start only, not workout logging.
 

@@ -54,3 +54,6 @@ private/*
 private/imports/*
 !private/imports/.gitkeep
 !private/imports/README.md
+
+# Local-only runtime screenshots from android-emulator-run skill
+.copilot/runtime-evidence/
